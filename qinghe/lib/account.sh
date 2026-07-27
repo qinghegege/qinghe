@@ -58,7 +58,7 @@ account_backup() {
     log_info "  别名: $_alias"
     log_info "  模式: $_mode"
 
-    cp -r "$_src_path"/* "$_target_dir/data/" 2>/dev/null
+    cp -r "$_src_path"/. "$_target_dir/data/" 2>/dev/null
     if [ $? -ne 0 ]; then
         log_err "备份失败: 文件复制错误"
         rm -rf "$_target_dir"

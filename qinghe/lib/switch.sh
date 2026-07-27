@@ -29,7 +29,7 @@ backup_current_snapshot() {
     fi
 
     mkdir -p "$_snapshot_dir/data"
-    cp -r "$_path"/* "$_snapshot_dir/data/" 2>/dev/null
+    cp -r "$_path"/. "$_snapshot_dir/data/" 2>/dev/null
 
     if [ $? -eq 0 ]; then
         log_info "自动快照已保存: snapshot_$_ts"
@@ -66,8 +66,8 @@ apply_backup() {
         return 1
     fi
 
-    rm -rf "$_target_path"/* 2>/dev/null
-    cp -r "$_data_dir"/* "$_target_path/" 2>/dev/null
+    find "$_target_path" -mindepth 1 -maxdepth 1 -exec rm -rf {} \; 2>/dev/null
+    cp -r "$_data_dir"/. "$_target_path/" 2>/dev/null
 
     if [ $? -ne 0 ]; then
         log_err "数据恢复失败"
@@ -113,8 +113,8 @@ rollback() {
         return 1
     fi
 
-    rm -rf "$_path"/* 2>/dev/null
-    cp -r "$_data_dir"/* "$_path/" 2>/dev/null
+    find "$_path" -mindepth 1 -maxdepth 1 -exec rm -rf {} \; 2>/dev/null
+    cp -r "$_data_dir"/. "$_path/" 2>/dev/null
 
     if [ $? -ne 0 ]; then
         log_err "回滚失败"

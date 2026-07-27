@@ -31,6 +31,17 @@ detect_clone_path() {
     echo ""
 }
 
+check_pkg_installed() {
+    _pkg="$1"
+    if [ "$HAS_PM" = true ]; then
+        pm list packages "$_pkg" 2>/dev/null | grep -q "$_pkg" && return 0
+    fi
+    if [ -d "/data/data/$_pkg" ]; then
+        return 0
+    fi
+    return 1
+}
+
 detect_all_entries() {
     _found=""
     while IFS= read -r _line; do
@@ -42,7 +53,7 @@ detect_all_entries() {
 
         _installed=false
         _size="0"
-        if [ -d "$_path" ]; then
+        if check_pkg_installed "$_pkg" && [ -d "$_path" ]; then
             _installed=true
             _size="$(get_dir_size "$_path")"
         fi

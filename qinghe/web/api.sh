@@ -20,6 +20,7 @@ export QH_DATA_DIR="${QH_DATA_DIR:-}"
 ensure_data_dirs
 
 detect_env 2>/dev/null || true
+check_dependencies
 
 http_get_param() {
     _key="$1"
