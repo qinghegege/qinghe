@@ -184,7 +184,7 @@ body{
 <div class="header">
   <span class="ribbon">🎀</span>
   <h1>清荷</h1>
-  <span class="ver">v1.0.0</span>
+  <span class="ver">v1.0.2</span>
 </div>
 
 <div class="container">
@@ -250,6 +250,7 @@ body{
 </div>
 
 <div id="toast" class="toast"></div>
+<div id="timeout-bar" class="timeout-bar" style="display:none"></div>
 
 <script>
 var API='/cgi-bin/api';
@@ -540,8 +541,7 @@ function toggleSelect(el,alias){
   }
 }
 
-function execRestore(){
-  if(!STATE.selectedBackup){
+function execRestore(){  if(!STATE.selectedBackup){
     toast('请先选择一个备份','err');
     return;
   }
@@ -586,6 +586,30 @@ function execRestore(){
 
 // === 初始化 ===
 startDetect();
+
+// === Web 超时倒计时 ===
+function pollTimeout(){
+  api('timeout').then(function(d){
+    var bar=document.getElementById('timeout-bar');
+    var rem=d.remaining||120;
+    if(rem<=0){
+      bar.style.display='none';
+      return;
+    }
+    bar.style.display='block';
+    var min=Math.floor(rem/60);
+    var sec=rem%60;
+    var text=min>0?'Web 服务将在 '+min+' 分 '+sec+' 秒后自动关闭':'Web 服务将在 '+sec+' 秒后自动关闭';
+    bar.textContent=text;
+    if(rem<=10){
+      bar.classList.add('warning');
+    }else{
+      bar.classList.remove('warning');
+    }
+  }).catch(function(){});
+}
+setInterval(pollTimeout,5000);
+pollTimeout();
 </script>
 </body>
 </html>

@@ -22,6 +22,8 @@ ensure_data_dirs
 detect_env 2>/dev/null || true
 check_dependencies
 
+touch "$ACTIVITY_FILE" 2>/dev/null || true
+
 http_get_param() {
     _key="$1"
     _default="$2"
@@ -187,7 +189,21 @@ case "$_action" in
 
     status)
         _se="$(getenforce 2>/dev/null || echo 'unknown')"
-        respond "{\"ok\":true,\"version\":\"1.0.0\",\"dataDir\":\"$DATA_DIR\",\"selinux\":\"$_se\"}"
+        respond "{\"ok\":true,\"version\":\"1.0.2\",\"dataDir\":\"$DATA_DIR\",\"selinux\":\"$_se\"}"
+        ;;
+
+    timeout)
+        _remaining=120
+        if [ -f "$ACTIVITY_FILE" ]; then
+            _last="$(stat -c '%Y' "$ACTIVITY_FILE" 2>/dev/null)"
+            if [ -n "$_last" ]; then
+                _now="$(date +%s)"
+                _idle=$(( _now - _last ))
+                _remaining=$(( 120 - _idle ))
+                [ $_remaining -lt 0 ] && _remaining=0
+            fi
+        fi
+        respond "{\"timeout\":120,\"remaining\":$_remaining}"
         ;;
 
     *)
