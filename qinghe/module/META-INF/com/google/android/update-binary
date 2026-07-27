@@ -1,0 +1,54 @@
+#!/sbin/sh
+#===============================================================================
+# 清荷 - Magisk 模块通用更新二进制
+#===============================================================================
+
+#################
+# Initialization
+#################
+
+umask 022
+
+echo "$NAME $VER ($VERCODE)"
+echo "*******************************"
+
+OUTFD=$2
+ZIPFILE=$3
+
+mount /data 2>/dev/null
+
+[ -f /data/adb/magisk/util_functions.sh ] && . /data/adb/magisk/util_functions.sh
+[ -f /data/adb/ksu/util_functions.sh ] && . /data/adb/ksu/util_functions.sh
+
+api_level_arch_detect
+
+MODPATH=/data/adb/modules/qinghe
+
+install_module() {
+    ui_print "- 正在安装..."
+    
+    mkdir -p $MODPATH
+    unzip -o "$ZIPFILE" -d $MODPATH/ >&2
+    
+    [ -d "$MODPATH/module" ] && cp -rf "$MODPATH/module"/* "$MODPATH/" 2>/dev/null
+    
+    chmod -R 755 $MODPATH 2>/dev/null
+    chmod 755 $MODPATH/qinghe.sh 2>/dev/null
+    chmod 755 $MODPATH/lib/*.sh 2>/dev/null
+    chmod 755 $MODPATH/web/server.sh 2>/dev/null
+    chmod 755 $MODPATH/web/api.sh 2>/dev/null
+    chmod 755 $MODPATH/customize.sh 2>/dev/null
+    chmod 755 $MODPATH/uninstall.sh 2>/dev/null
+    
+    ui_print "- 执行安装脚本..."
+    [ -f "$MODPATH/customize.sh" ] && . "$MODPATH/customize.sh"
+    
+    ui_print ""
+    ui_print "安装完成!"
+}
+
+install_module
+
+rm -rf $MODPATH/update-binary 2>/dev/null
+
+exit 0

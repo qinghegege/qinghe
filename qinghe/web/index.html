@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>清荷 - 腾讯手游账号切换器</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif;
+  background:linear-gradient(180deg,#FFF0F5 0%,#FFE4E1 30%,#FFD6E0 100%);
+  color:#5D4E5F;min-height:100vh;overflow-x:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+
+:root{
+  --pink:#FF6B9D;--pink-light:#FF85AB;--pink-pale:#FFB8CC;
+  --pink-bg:#FFF0F5;--white:#FFF;--text:#5D4E5F;
+  --text-light:#B8A9C6;--coral:#FF8A80;--mint:#98D8C8;
+  --radius:14px;--shadow:0 2px 12px rgba(255,107,157,0.15);
+}
+
+.header{
+  background:linear-gradient(135deg,#FF6B9D,#FF85AB);
+  padding:18px 16px 14px;text-align:center;position:relative;
+  box-shadow:0 2px 12px rgba(255,107,157,0.25);
+}
+.header .ribbon{font-size:36px;display:block;line-height:1;margin-bottom:4px}
+.header h1{font-size:20px;color:#fff;font-weight:700;letter-spacing:1px}
+.header .ver{font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px}
+
+.container{max-width:460px;margin:0 auto;padding:12px 14px 80px}
+
+.card{
+  background:var(--white);border-radius:var(--radius);padding:14px;margin-bottom:8px;
+  box-shadow:var(--shadow);border:2px solid transparent;transition:all 0.15s;
+}
+.card.selectable{cursor:pointer}
+.card.selectable:active{transform:scale(0.98)}
+.card.selected{border-color:var(--pink);background:var(--pink-bg)}
+
+.card-row{display:flex;align-items:center;gap:10px}
+.card-icon{
+  width:42px;height:42px;border-radius:12px;display:flex;
+  align-items:center;justify-content:center;font-size:22px;flex-shrink:0;
+}
+.card-info{flex:1;min-width:0}
+.card-title{font-size:14px;font-weight:600;color:var(--text)}
+.card-meta{font-size:10px;color:var(--text-light);margin-top:2px}
+.card-badge{
+  font-size:10px;padding:3px 8px;border-radius:8px;font-weight:500;flex-shrink:0;
+}
+.badge-on{background:#E8F5E9;color:#66BB6A}
+.badge-off{background:#F5F5F5;color:#C0B8C8}
+
+.btn{
+  display:block;width:100%;padding:13px;border:none;border-radius:var(--radius);
+  font-size:14px;font-weight:600;cursor:pointer;text-align:center;
+  transition:opacity 0.15s;margin-bottom:8px;letter-spacing:0.5px;
+}
+.btn:active{opacity:0.75}
+.btn-pink{
+  background:linear-gradient(135deg,#FF6B9D,#FF85AB);color:#fff;
+  box-shadow:0 3px 10px rgba(255,107,157,0.3);
+}
+.btn-mint{
+  background:linear-gradient(135deg,#98D8C8,#7EC8B0);color:#fff;
+  box-shadow:0 3px 10px rgba(152,216,200,0.3);
+}
+.btn-coral{
+  background:linear-gradient(135deg,#FF8A80,#FF6E60);color:#fff;
+  box-shadow:0 3px 10px rgba(255,138,128,0.25);
+}
+.btn-white{
+  background:#fff;color:var(--pink);border:2px solid #FFE4EC;
+}
+.btn-row{display:flex;gap:8px}
+.btn-row .btn{flex:1}
+
+.section{margin-top:14px}
+.section-title{
+  font-size:12px;color:var(--text-light);font-weight:600;margin-bottom:8px;padding-left:2px;
+}
+
+.acc-item{
+  background:var(--white);border-radius:var(--radius);padding:12px 14px;margin-bottom:6px;
+  display:flex;align-items:center;gap:10px;border:2px solid #FFE4EC;
+  transition:all 0.15s;cursor:pointer;
+}
+.acc-item:active{transform:scale(0.98)}
+.acc-item.checked{border-color:var(--pink);background:var(--pink-bg)}
+.acc-checkbox{
+  width:22px;height:22px;border-radius:50%;border:2px solid var(--pink-pale);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:12px;color:transparent;transition:all 0.2s;
+}
+.acc-item.checked .acc-checkbox{
+  background:var(--pink);border-color:var(--pink);color:#fff;
+}
+.acc-info{flex:1;min-width:0}
+.acc-alias{font-size:14px;font-weight:600;color:var(--text)}
+.acc-detail{font-size:10px;color:var(--text-light);margin-top:2px}
+
+.path-card{
+  padding:16px 14px;margin-bottom:8px;
+}
+.path-card .path-icon{font-size:24px;margin-bottom:6px}
+.path-card .path-label{font-size:13px;font-weight:600;color:var(--text)}
+.path-card .path-text{font-size:10px;color:var(--text-light);margin-top:4px;word-break:break-all}
+.path-card .path-size{font-size:11px;color:var(--pink);margin-top:4px;font-weight:500}
+
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  padding:10px 22px;border-radius:24px;font-size:13px;z-index:99;
+  opacity:0;transition:opacity 0.3s;font-weight:500;pointer-events:none;
+}
+.toast.on{opacity:1}
+.toast.ok{background:var(--mint);color:#fff}
+.toast.err{background:var(--coral);color:#fff}
+.toast.info{background:rgba(0,0,0,0.75);color:#fff}
+
+.modal-overlay{
+  position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);
+  z-index:50;display:none;align-items:flex-end;justify-content:center;
+}
+.modal-overlay.on{display:flex}
+.modal{
+  background:#fff;width:100%;max-width:460px;border-radius:20px 20px 0 0;
+  padding:24px 18px 30px;max-height:70vh;overflow-y:auto;
+}
+.modal h3{font-size:17px;color:var(--text);margin-bottom:6px;font-weight:700}
+.modal p{font-size:12px;color:var(--text-light);margin-bottom:14px;line-height:1.5}
+.modal input{
+  width:100%;padding:12px 14px;border:2px solid #FFE4EC;border-radius:12px;
+  font-size:14px;color:var(--text);outline:none;background:#FFF8FA;margin-bottom:14px;
+}
+.modal input:focus{border-color:var(--pink)}
+.modal .detail-row{font-size:12px;color:var(--text);margin-bottom:6px;display:flex}
+.modal .detail-row .label{color:var(--text-light);width:64px;flex-shrink:0}
+
+.page{display:none}
+.page.on{display:block}
+
+.confirm-overlay{
+  position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);
+  z-index:60;display:none;align-items:center;justify-content:center;
+}
+.confirm-overlay.on{display:flex}
+.confirm-box{
+  background:#fff;border-radius:16px;padding:24px 20px;text-align:center;
+  width:300px;max-width:90vw;
+}
+.confirm-box h3{font-size:16px;color:var(--text);margin-bottom:8px}
+.confirm-box .info-lines{text-align:left;font-size:11px;color:var(--text-light);margin-bottom:14px;line-height:1.6}
+.confirm-box .btn-row{display:flex;gap:8px}
+.confirm-box .btn-row .btn{flex:1;margin:0}
+
+.empty{text-align:center;padding:36px 20px;color:#C0B8C8}
+.empty .icon{font-size:48px;margin-bottom:8px}
+.empty .text{font-size:13px;line-height:1.5}
+
+.loading{text-align:center;padding:40px 20px}
+.spin{
+  display:inline-block;width:24px;height:24px;border:3px solid #FFE4EC;
+  border-top-color:var(--pink);border-radius:50%;
+  animation:spin 0.8s linear infinite;margin-bottom:8px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:12px;color:var(--text-light)}
+
+.heart-line{text-align:center;font-size:14px;letter-spacing:3px;margin:8px 0;color:var(--pink-pale)}
+
+.timeout-bar{
+  position:fixed;bottom:0;left:0;right:0;background:rgba(255,182,193,0.9);
+  color:#fff;text-align:center;padding:6px;font-size:11px;z-index:40;
+  transition:background 0.3s;
+}
+.timeout-bar.warning{background:rgba(255,138,128,0.9);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="ribbon">🎀</span>
+  <h1>清荷</h1>
+  <span class="ver">v1.0.0</span>
+</div>
+
+<div class="container">
+
+  <div id="page-loading" class="page on">
+    <div class="heart-line">♥ ♥ ♥</div>
+    <div class="loading">
+      <div class="spin"></div>
+      <div class="loading-text" id="loading-msg">正在检测游戏...</div>
+    </div>
+  </div>
+
+  <div id="page-games" class="page">
+    <div class="heart-line">♥ ♥ ♥</div>
+    <div id="games-list"></div>
+  </div>
+
+  <div id="page-paths" class="page">
+    <div id="paths-back" style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--pink);margin-bottom:12px;cursor:pointer;font-weight:500" onclick="showPage('games')">◀ 返回游戏列表</div>
+    <div id="paths-title" style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px"></div>
+    <div id="paths-sub" style="font-size:11px;color:var(--text-light);margin-bottom:14px"></div>
+    <div id="paths-cards"></div>
+    <div id="paths-actions" style="margin-top:14px"></div>
+  </div>
+
+  <div id="page-backup" class="page">
+    <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--pink);margin-bottom:12px;cursor:pointer;font-weight:500" onclick="showPage('paths')">◀ 返回路径选择</div>
+    <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px" id="backup-title"></div>
+    <div style="font-size:11px;color:var(--text-light);margin-bottom:14px" id="backup-sub"></div>
+    <button class="btn btn-pink" onclick="doAutoBackup()">一键自动备份</button>
+    <button class="btn btn-white" onclick="showNameModal()">自定义命名备份</button>
+  </div>
+
+  <div id="page-restore" class="page">
+    <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--pink);margin-bottom:12px;cursor:pointer;font-weight:500" onclick="showPage('paths')">◀ 返回路径选择</div>
+    <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px" id="restore-title"></div>
+    <div style="font-size:11px;color:var(--text-light);margin-bottom:8px" id="restore-sub"></div>
+    <div id="restore-list"></div>
+    <div style="margin-top:14px;display:flex;gap:8px" id="restore-actions"></div>
+  </div>
+
+</div>
+
+<div class="modal-overlay" id="name-modal">
+  <div class="modal">
+    <h3>自定义备份名称</h3>
+    <p>为当前账号取一个方便记忆的名称</p>
+    <input type="text" id="backup-name-input" placeholder="例如: 大号、小号、测试号..." maxlength="32">
+    <button class="btn btn-pink" onclick="doCustomBackup()">确认备份</button>
+    <button class="btn btn-white" onclick="closeNameModal()">取消</button>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <h3 id="confirm-title"></h3>
+    <div class="info-lines" id="confirm-info"></div>
+    <div class="btn-row">
+      <button class="btn btn-white" onclick="closeConfirm(false)">取消</button>
+      <button class="btn btn-pink" id="confirm-ok">确认</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+var API='/cgi-bin/api';
+var STATE={
+  currentGame:null,
+  currentGameDisplay:'',
+  currentPath:'',
+  currentIsClone:false,
+  selectedBackup:null,
+  detectTimer:null
+};
+
+function api(path,params){
+  var u=API+'?action='+path;
+  var o={method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'}};
+  if(params){
+    o.body=Object.keys(params).map(function(k){
+      return k+'='+encodeURIComponent(params[k]||'');
+    }).join('&');
+  }
+  return fetch(u,o).then(function(r){return r.json()});
+}
+
+function toast(msg,type){
+  var t=document.getElementById('toast');
+  t.className='toast '+(type||'info')+' on';
+  t.textContent=msg;
+  setTimeout(function(){t.classList.remove('on')},2200);
+}
+
+var confirmCb=null;
+function showConfirm(title,infoHtml,cb){
+  document.getElementById('confirm-title').textContent=title;
+  document.getElementById('confirm-info').innerHTML=infoHtml;
+  document.getElementById('confirm-overlay').classList.add('on');
+  document.getElementById('confirm-ok').onclick=function(){closeConfirm(true)};
+  confirmCb=cb;
+}
+
+function closeConfirm(ok){
+  document.getElementById('confirm-overlay').classList.remove('on');
+  if(ok && confirmCb)confirmCb();
+  confirmCb=null;
+}
+
+function showPage(name){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on')});
+  var el=document.getElementById('page-'+name);
+  if(el)el.classList.add('on');
+}
+
+function gameIcon(name){
+  var m={
+    sgame:'👑',pubgm:'🔫',dfm:'🎯',valorant:'⚡',cf:'💣'
+  };
+  var b={
+    sgame:'#FFF0E0',pubgm:'#E8F5E9',dfm:'#F3E5F5',valorant:'#E0F7FA',cf:'#FFEBEE'
+  };
+  return {emoji:m[name]||'🎮',bg:b[name]||'#F5F5F5'};
+}
+
+// === 页面1: 加载 ===
+function startDetect(){
+  STATE.detectTimer=setTimeout(function(){
+    document.getElementById('loading-msg').textContent='检测超时, 显示预置列表...';
+    setTimeout(function(){
+      showPage('games');
+      renderPresetGames();
+    },600);
+  },10000);
+
+  api('detect').then(function(d){
+    clearTimeout(STATE.detectTimer);
+    showPage('games');
+    renderGames(d.games||[]);
+  }).catch(function(){
+    clearTimeout(STATE.detectTimer);
+    showPage('games');
+    renderPresetGames();
+  });
+}
+
+function renderPresetGames(){
+  var preset=[
+    {name:'sgame',display:'王者荣耀',pkg:'com.tencent.tmgp.sgame'},
+    {name:'pubgm',display:'和平精英',pkg:'com.tencent.tmgp.pubgmhd'},
+    {name:'dfm',display:'三角洲行动',pkg:'com.tencent.tmgp.dfm'},
+    {name:'valorant',display:'无畏契约',pkg:'com.tencent.tmgp.valorant'},
+    {name:'cf',display:'CF手游',pkg:'com.tencent.tmgp.cf'}
+  ];
+  var tip='<div style="font-size:11px;color:var(--coral);text-align:center;margin-bottom:10px">自动检测超时, 请从下方选择游戏</div>';
+  var h=tip;
+  preset.forEach(function(g){
+    var icon=gameIcon(g.name);
+    h+='<div class="card selectable" onclick="selectGame(\''+g.name+'\',\''+g.display+'\')">';
+    h+='<div class="card-row"><div class="card-icon" style="background:'+icon.bg+'">'+icon.emoji+'</div>';
+    h+='<div class="card-info"><div class="card-title">'+g.display+'</div><div class="card-meta">'+g.pkg+'</div></div>';
+    h+='<span class="badge-off card-badge">预置</span></div></div>';
+  });
+  document.getElementById('games-list').innerHTML=h;
+}
+
+function renderGames(games){
+  var h='';
+  var installed=games.filter(function(g){return g.installed||(g.clone&&g.clone.installed)});
+  var notInstalled=games.filter(function(g){return !g.installed&&(!g.clone||!g.clone.installed)});
+
+  if(installed.length===0){
+    h+='<div class="empty"><div class="icon">🎮</div><div class="text">未检测到已安装的腾讯手游<br><br>请确认已授予 Root 权限</div></div>';
+  }
+  installed.forEach(function(g){
+    var icon=gameIcon(g.name);
+    h+='<div class="card selectable" onclick="selectGame(\''+g.name+'\',\''+g.display+'\')">';
+    h+='<div class="card-row"><div class="card-icon" style="background:'+icon.bg+'">'+icon.emoji+'</div>';
+    h+='<div class="card-info"><div class="card-title">'+g.display+'</div><div class="card-meta">'+g.pkg+' · '+g.size+'</div></div>';
+    if(g.clone&&g.clone.installed){
+      h+='<span class="badge-on card-badge">本机+分身</span>';
+    }else{
+      h+='<span class="badge-on card-badge">本机</span>';
+    }
+    h+='</div></div>';
+  });
+
+  if(notInstalled.length){
+    h+='<div class="section-title" style="margin-top:16px">未安装的游戏</div>';
+    notInstalled.forEach(function(g){
+      var icon=gameIcon(g.name);
+      h+='<div class="card" style="opacity:0.45;cursor:default">';
+      h+='<div class="card-row"><div class="card-icon" style="background:#F0F0F0">❓</div>';
+      h+='<div class="card-info"><div class="card-title">'+g.display+'</div><div class="card-meta">'+g.pkg+'</div></div>';
+      h+='<span class="badge-off card-badge">未安装</span></div></div>';
+    });
+  }
+  document.getElementById('games-list').innerHTML=h;
+}
+
+// === 页面2: 游戏详情/路径选择 ===
+
+function selectGame(name,display){
+  STATE.currentGame=name;
+  STATE.currentGameDisplay=display;
+
+  document.getElementById('paths-title').textContent=display;
+  document.getElementById('paths-sub').textContent='选择数据路径';
+
+  api('detect').then(function(d){
+    var games=d.games||[];
+    var game=null;
+    for(var i=0;i<games.length;i++){
+      if(games[i].name===name){game=games[i];break}
+    }
+    if(!game){
+      game={name:name,display:display,installed:true,size:'-',path:'',
+        clone:{installed:false,path:'',size:'-'}};
+    }
+    renderPathCards(game);
+    showPage('paths');
+  }).catch(function(){
+    toast('连接失败','err');
+  });
+}
+
+function renderPathCards(game){
+  var h='';
+
+  h+='<div class="card selectable path-card" style="margin-top:0" onclick="selectPath(\''+(game.path||'')+'\',false,this)">';
+  h+='<div class="path-icon">📱</div>';
+  h+='<div class="path-label">本机路径</div>';
+  h+='<div class="path-text">'+(game.path||'自动检测')+'</div>';
+  h+='<div class="path-size">大小: '+game.size+'</div>';
+  h+='</div>';
+
+  if(game.clone&&game.clone.installed){
+    h+='<div class="card selectable path-card" onclick="selectPath(\''+(game.clone.path||'')+'\',true,this)">';
+    h+='<div class="path-icon">📲</div>';
+    h+='<div class="path-label">分身路径</div>';
+    h+='<div class="path-text">'+(game.clone.path||'')+'</div>';
+    h+='<div class="path-size">大小: '+game.clone.size+'</div>';
+    h+='</div>';
+  }
+
+  document.getElementById('paths-cards').innerHTML=h;
+
+  var act='<div style="display:flex;gap:8px">';
+  act+='<button class="btn btn-pink" onclick="showPage(\'backup\')">备份</button>';
+  act+='<button class="btn btn-white" onclick="showPage(\'restore\');loadRestoreList()">恢复</button>';
+  act+='</div>';
+  document.getElementById('paths-actions').innerHTML=act;
+}
+
+function selectPath(path,isClone,el){
+  STATE.currentPath=path;
+  STATE.currentIsClone=!!isClone;
+
+  document.querySelectorAll('#paths-cards .card').forEach(function(c){c.classList.remove('selected')});
+  el.classList.add('selected');
+
+  var label=isClone?'分身路径':'本机路径';
+  document.getElementById('backup-title').textContent='备份 - '+STATE.currentGameDisplay+' ('+label+')';
+  document.getElementById('backup-sub').textContent=path||'自动路径';
+  document.getElementById('restore-title').textContent='恢复 - '+STATE.currentGameDisplay+' ('+label+')';
+  document.getElementById('restore-sub').textContent=path||'自动路径';
+}
+
+// === 页面3: 备份 ===
+
+function showNameModal(){
+  document.getElementById('name-modal').classList.add('on');
+  document.getElementById('backup-name-input').value='';
+  setTimeout(function(){document.getElementById('backup-name-input').focus()},300);
+}
+
+function closeNameModal(){
+  document.getElementById('name-modal').classList.remove('on');
+}
+
+function doCustomBackup(){
+  var alias=document.getElementById('backup-name-input').value.trim();
+  if(!alias){toast('请输入备份名称','err');return}
+  closeNameModal();
+  executeBackup(alias,'custom');
+}
+
+function doAutoBackup(){
+  var ts=new Date().toISOString().replace(/[-:]/g,'').replace('T','-').slice(0,15);
+  var alias='自动备份-'+ts;
+  executeBackup(alias,'auto');
+}
+
+function executeBackup(alias,mode){
+  showPage('loading');
+  toast('正在备份...','info');
+
+  api('backup',{game:STATE.currentGame,alias:alias,path:STATE.currentPath,mode:mode})
+  .then(function(d){
+    if(d.ok){
+      toast('备份成功: '+alias,'ok');
+      showPage('paths');
+    }else{
+      toast(d.error||'备份失败','err');
+      showPage('paths');
+    }
+  }).catch(function(){
+    toast('请求失败','err');
+    showPage('paths');
+  });
+}
+
+// === 页面4: 恢复 ===
+
+function loadRestoreList(){
+  var list=document.getElementById('restore-list');
+  list.innerHTML='<div class="loading"><div class="spin"></div><div class="loading-text">加载中...</div></div>';
+
+  api('accounts',{game:STATE.currentGame,path:STATE.currentPath}).then(function(d){
+    var accounts=d.accounts||[];
+    var h='';
+
+    if(accounts.length===0){
+      h='<div class="empty"><div class="icon">📭</div><div class="text">还没有备份过账号<br>请先进行备份</div></div>';
+    }else{
+      accounts.forEach(function(a){
+        h+='<div class="acc-item" onclick="toggleSelect(this,\''+a.alias+'\')" id="acc-'+a.alias.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g,'_')+'">';
+        h+='<div class="acc-checkbox">♥</div>';
+        h+='<div class="acc-info"><div class="acc-alias">'+a.alias+'</div><div class="acc-detail">'+a.time+' · '+a.size+'</div></div>';
+        h+='</div>';
+      });
+    }
+
+    list.innerHTML=h;
+
+    var act='<button class="btn btn-pink" onclick="execRestore()">恢复选中账号</button>';
+    act+='<button class="btn btn-white" onclick="showPage(\'paths\')">取消</button>';
+    document.getElementById('restore-actions').innerHTML=act;
+  }).catch(function(){
+    list.innerHTML='<div class="empty"><div class="icon">😿</div><div class="text">加载失败</div></div>';
+  });
+}
+
+function toggleSelect(el,alias){
+  var wasChecked=el.classList.contains('checked');
+  document.querySelectorAll('#restore-list .acc-item').forEach(function(it){it.classList.remove('checked')});
+  if(!wasChecked){
+    el.classList.add('checked');
+    STATE.selectedBackup=alias;
+  }else{
+    STATE.selectedBackup=null;
+  }
+}
+
+function execRestore(){
+  if(!STATE.selectedBackup){
+    toast('请先选择一个备份','err');
+    return;
+  }
+  var alias=STATE.selectedBackup;
+
+  api('accounts',{game:STATE.currentGame,path:STATE.currentPath}).then(function(d){
+    var accounts=d.accounts||[];
+    var info=null;
+    for(var i=0;i<accounts.length;i++){
+      if(accounts[i].alias===alias){info=accounts[i];break}
+    }
+    if(!info){toast('备份信息获取失败','err');return}
+
+    var infoHtml='';
+    infoHtml+='<div>"'+info.alias+'"</div>';
+    infoHtml+='<div>游戏: '+info.display+'</div>';
+    infoHtml+='<div>时间: '+info.time+'</div>';
+    infoHtml+='<div>大小: '+info.size+'</div>';
+    infoHtml+='<div style="color:var(--coral);margin-top:6px">恢复前会自动备份当前数据</div>';
+
+    showConfirm('确认恢复',infoHtml,function(){
+      showPage('loading');
+      toast('正在恢复...','info');
+      api('restore',{alias:alias}).then(function(r){
+        if(r.ok){
+          toast('恢复成功: '+alias,'ok');
+          STATE.selectedBackup=null;
+          showPage('paths');
+        }else{
+          toast(r.error||'恢复失败','err');
+          showPage('restore');
+          loadRestoreList();
+        }
+      }).catch(function(){
+        toast('请求失败','err');
+        showPage('restore');
+        loadRestoreList();
+      });
+    });
+  });
+}
+
+// === 初始化 ===
+startDetect();
+</script>
+</body>
+</html>

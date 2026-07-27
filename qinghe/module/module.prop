@@ -1,0 +1,6 @@
+id=qinghe
+name=清荷 - 腾讯手游账号本地切换器
+version=v1.0.0
+versionCode=100
+author=qinghe
+description=通过备份和替换游戏本地数据实现多账号快速切换。支持王者荣耀、和平精英、三角洲行动、无畏契约、CF手游。Web UI 端口 8848。
