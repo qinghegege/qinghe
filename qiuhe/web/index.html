@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>清荷 - 腾讯手游账号切换器</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif;background:linear-gradient(180deg,#FFF0F5 0%,#FFE4E1 50%,#FFD6E0 100%);color:#5D4E5F;min-height:100vh;overflow-x:hidden}
+
+/* 顶部 */
+.header{background:linear-gradient(135deg,#FF6B9D,#FF85AB);padding:20px 16px 16px;text-align:center;position:relative;box-shadow:0 2px 12px rgba(255,107,157,0.25)}
+.header .ribbon{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:32px;filter:drop-shadow(0 2px 4px rgba(255,107,157,0.3))}
+.header h1{font-size:22px;color:#fff;font-weight:700;letter-spacing:1px;text-shadow:0 1px 2px rgba(0,0,0,0.1)}
+.header p{font-size:12px;color:rgba(255,255,255,0.85);margin-top:2px}
+
+.container{max-width:460px;margin:0 auto;padding:12px 14px 80px}
+
+/* 游戏卡片 */
+.game-card{background:#fff;border-radius:16px;padding:16px;margin-bottom:10px;box-shadow:0 2px 8px rgba(255,107,157,0.08);transition:transform 0.15s;border:1px solid #FFE4EC;cursor:pointer}
+.game-card:active{transform:scale(0.98)}
+.game-card .gc-top{display:flex;align-items:center;gap:12px}
+.game-card .gc-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.game-card .gc-info{flex:1;min-width:0}
+.game-card .gc-name{font-size:15px;font-weight:600;color:#5D4E5F}
+.game-card .gc-meta{font-size:11px;color:#B8A9C6;margin-top:2px}
+.game-card .gc-badge{font-size:10px;padding:3px 8px;border-radius:8px;font-weight:500}
+.badge-on{background:#E8F5E9;color:#66BB6A}
+.badge-off{background:#F5F5F5;color:#C0B8C8}
+.game-card .gc-arrow{font-size:18px;color:#D4C4E0}
+
+/* 游戏详情页 */
+.detail-page{display:none}
+.detail-page.on{display:block}
+.detail-back{display:flex;align-items:center;gap:6px;font-size:14px;color:#FF6B9D;margin-bottom:14px;cursor:pointer;font-weight:500}
+.detail-back:active{opacity:0.7}
+.detail-title{font-size:20px;font-weight:700;color:#5D4E5F;margin-bottom:4px}
+.detail-subtitle{font-size:12px;color:#B8A9C6;margin-bottom:16px}
+
+/* 按钮 */
+.btn{display:block;width:100%;padding:14px;border:none;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;text-align:center;transition:opacity 0.15s;margin-bottom:8px;letter-spacing:0.5px}
+.btn:active{opacity:0.75}
+.btn-pink{background:linear-gradient(135deg,#FF6B9D,#FF85AB);color:#fff;box-shadow:0 3px 10px rgba(255,107,157,0.3)}
+.btn-mint{background:linear-gradient(135deg,#98D8C8,#7EC8B0);color:#fff;box-shadow:0 3px 10px rgba(152,216,200,0.3)}
+.btn-coral{background:linear-gradient(135deg,#FF8A80,#FF6E60);color:#fff;box-shadow:0 3px 10px rgba(255,138,128,0.25)}
+.btn-white{background:#fff;color:#FF6B9D;border:2px solid #FFE4EC}
+.btn-sm{padding:10px;font-size:13px;border-radius:10px;display:inline-block;width:auto;margin-right:6px}
+
+/* 账号列表 */
+.acc-section{margin-top:14px}
+.acc-section-title{font-size:13px;color:#B8A9C6;font-weight:600;margin-bottom:8px;padding-left:2px}
+.acc-item{background:#fff;border-radius:12px;padding:14px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;border:1px solid #FFE4EC}
+.acc-item-left{flex:1;min-width:0}
+.acc-alias{font-size:15px;font-weight:600;color:#5D4E5F}
+.acc-meta{font-size:10px;color:#C0B8C8;margin-top:2px}
+.acc-actions{display:flex;gap:6px;flex-shrink:0}
+.acc-actions .btn{width:auto;padding:7px 14px;font-size:12px;margin:0}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 22px;border-radius:24px;font-size:13px;z-index:99;opacity:0;transition:opacity 0.3s;font-weight:500}
+.toast.on{opacity:1}
+.toast.ok{background:#98D8C8;color:#fff}
+.toast.err{background:#FF8A80;color:#fff}
+.toast.info{background:rgba(0,0,0,0.75);color:#fff}
+
+/* Modal */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:50;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.on{display:flex}
+.modal{background:#fff;width:100%;max-width:460px;border-radius:20px 20px 0 0;padding:24px 18px 30px;max-height:70vh;overflow-y:auto}
+.modal h3{font-size:18px;color:#5D4E5F;margin-bottom:6px;font-weight:700}
+.modal p{font-size:13px;color:#B8A9C6;margin-bottom:16px}
+.modal input{width:100%;padding:12px 14px;border:2px solid #FFE4EC;border-radius:12px;font-size:15px;color:#5D4E5F;outline:none;background:#FFF8FA;margin-bottom:14px}
+.modal input:focus{border-color:#FF6B9D}
+
+/* 空状态 */
+.empty{text-align:center;padding:40px 20px;color:#C0B8C8}
+.empty .emoji{font-size:48px;margin-bottom:10px}
+.empty .text{font-size:14px;line-height:1.6}
+
+/* 加载 */
+.loading{text-align:center;padding:40px 20px}
+.spin{display:inline-block;width:24px;height:24px;border:3px solid #FFE4EC;border-top-color:#FF6B9D;border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:#C0B8C8}
+
+/* 蝴蝶结装饰 */
+.deco-hearts{text-align:center;font-size:14px;letter-spacing:3px;margin:8px 0;color:#FFB8CC}
+
+/* 确认对话框 */
+.confirm-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:60;display:none;align-items:center;justify-content:center}
+.confirm-overlay.on{display:flex}
+.confirm-box{background:#fff;border-radius:16px;padding:24px 20px;text-align:center;width:280px}
+.confirm-box h3{font-size:16px;color:#5D4E5F;margin-bottom:8px}
+.confirm-box p{font-size:13px;color:#B8A9C6;margin-bottom:18px;line-height:1.5}
+.confirm-box .btn-row{display:flex;gap:8px}
+.confirm-box .btn-row .btn{flex:1;margin:0}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="ribbon">🎀</div>
+  <h1>清荷</h1>
+  <p>腾讯手游账号切换 · Hello Kitty</p>
+</div>
+
+<div class="container">
+  <!-- 游戏列表 -->
+  <div id="page-games">
+    <div class="deco-hearts">♥ ♥ ♥</div>
+    <div id="games-list"><div class="loading"><div class="spin"></div><div class="loading-text">正在检测游戏...</div></div></div>
+  </div>
+
+  <!-- 游戏详情 -->
+  <div id="page-detail" class="detail-page">
+    <div class="detail-back" onclick="backToGames()">← 返回游戏列表</div>
+    <div class="detail-title" id="detail-name"></div>
+    <div class="detail-subtitle" id="detail-meta"></div>
+    <div id="detail-content"></div>
+  </div>
+</div>
+
+<!-- 确认对话框 -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <h3 id="confirm-title"></h3>
+    <p id="confirm-msg"></p>
+    <div class="btn-row">
+      <button class="btn btn-white" onclick="closeConfirm(false)">取消</button>
+      <button class="btn btn-pink" id="confirm-ok">确认</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+var API='/cgi-bin/api';
+var currentGame=null;
+var currentGameDisplay='';
+var currentGamePath='';
+var currentIsClone=false;
+
+// --- 工具函数 ---
+
+function api(path,params){
+  var u=API+'?action='+path;
+  var o={method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'}};
+  if(params){
+    o.body=Object.entries(params).map(function(kv){return kv[0]+'='+encodeURIComponent(kv[1])}).join('');
+  }
+  return fetch(u,o).then(function(r){return r.json()});
+}
+
+function toast(msg,type){
+  var t=document.getElementById('toast');
+  t.className='toast '+(type||'info')+' on';
+  t.textContent=msg;
+  setTimeout(function(){t.classList.remove('on')},2200);
+}
+
+function showConfirm(title,msg,cb){
+  document.getElementById('confirm-title').textContent=title;
+  document.getElementById('confirm-msg').textContent=msg;
+  document.getElementById('confirm-overlay').classList.add('on');
+  document.getElementById('confirm-ok').onclick=function(){closeConfirm(true)};
+  window._confirmCb=cb;
+}
+
+function closeConfirm(ok){
+  document.getElementById('confirm-overlay').classList.remove('on');
+  if(ok && window._confirmCb)window._confirmCb();
+  window._confirmCb=null;
+}
+
+// --- 游戏列表 ---
+
+function loadGames(){
+  var list=document.getElementById('games-list');
+  list.innerHTML='<div class="loading"><div class="spin"></div><div class="loading-text">正在检测游戏...</div></div>';
+  api('detect').then(function(d){
+    var games=d.games||[];
+    var installed=games.filter(function(g){return g.installed});
+    var notInstalled=games.filter(function(g){return !g.installed});
+    var h='';
+    if(!installed.length)h+='<div class="empty"><div class="emoji">🎮</div><div class="text">未检测到已安装的腾讯手游<br><br>请确认已安装游戏并授予 Root 权限</div></div>';
+    installed.forEach(function(g){
+      var icon=gameIcon(g.name);
+      var label=g.clone?' · 分身':'';
+      h+='<div class="game-card" onclick="openGame(\''+g.name+'\',\''+g.display+label+'\',\''+(g.size||'0')+'\',\''+(g.path||'')+'\','+!!g.clone+')">';
+      h+='<div class="gc-top">';
+      h+='<div class="gc-icon" style="background:'+icon.bg+'">'+icon.emoji+'</div>';
+      h+='<div class="gc-info"><div class="gc-name">'+g.display+label+'</div><div class="gc-meta">'+g.pkg+' · 数据: '+(g.size||'0')+'</div></div>';
+      h+='<span class="badge-on gc-badge">'+(g.clone?'分身':'已安装')+'</span>';
+      h+='<span class="gc-arrow">›</span>';
+      h+='</div></div>';
+    });
+    if(notInstalled.length){
+      h+='<div style="font-size:12px;color:#C0B8C8;margin:16px 0 8px;font-weight:600">未安装的游戏</div>';
+      notInstalled.forEach(function(g){
+        h+='<div class="game-card" style="opacity:0.5;cursor:default">';
+        h+='<div class="gc-top"><div class="gc-icon" style="background:#F0F0F0">❓</div>';
+        h+='<div class="gc-info"><div class="gc-name">'+g.display+'</div><div class="gc-meta">'+g.pkg+'</div></div>';
+        h+='<span class="badge-off gc-badge">未安装</span></div></div>';
+      });
+    }
+    list.innerHTML=h;
+  }).catch(function(){
+    list.innerHTML='<div class="empty"><div class="emoji">😿</div><div class="text">连接服务器失败<br><br>请确认服务已启动</div></div>';
+  });
+}
+
+function gameIcon(name){
+  var map={
+    sgame:{emoji:'👑',bg:'#FFF0E0'},
+    pubgm:{emoji:'🔫',bg:'#E8F5E9'},
+    cf:{emoji:'💣',bg:'#FFEBEE'},
+    dfm:{emoji:'🎯',bg:'#F3E5F5'},
+    valorant:{emoji:'⚡',bg:'#E0F7FA'}
+  };
+  return map[name]||{emoji:'🎮',bg:'#F5F5F5'};
+}
+
+// --- 游戏详情 ---
+
+function openGame(name,display,size,path,isClone){
+  currentGame=name;
+  currentGameDisplay=display;
+  currentGamePath=path||'';
+  currentIsClone=!!isClone;
+  var icon=gameIcon(name);
+  document.getElementById('page-games').style.display='none';
+  document.getElementById('page-detail').classList.add('on');
+  document.getElementById('detail-name').textContent=icon.emoji+' '+display;
+  document.getElementById('detail-meta').textContent='数据大小: '+size;
+  loadGameDetail(name);
+}
+
+function backToGames(){
+  document.getElementById('page-detail').classList.remove('on');
+  document.getElementById('page-games').style.display='';
+  loadGames();
+}
+
+function loadGameDetail(game){
+  var ct=document.getElementById('detail-content');
+  ct.innerHTML='<div class="loading"><div class="spin"></div><div class="loading-text">加载中...</div></div>';
+
+  // 加载该游戏的已备份账号
+  api('accounts',{game:game}).then(function(d){
+    var accounts=d.accounts||[];
+    var h='';
+
+    // 备份按钮
+    h+='<button class="btn btn-pink" onclick="doBackup()">📦 备份当前账号</button>';
+
+    // 已备份的账号
+    h+='<div class="acc-section">';
+    h+='<div class="acc-section-title">📋 已备份账号 ('+accounts.length+')</div>';
+    if(accounts.length===0){
+      h+='<div class="empty"><div class="emoji">📭</div><div class="text">还没有备份过账号<br>点击上方按钮创建第一个备份</div></div>';
+    }else{
+      accounts.forEach(function(a){
+        h+='<div class="acc-item">';
+        h+='<div class="acc-item-left"><div class="acc-alias">'+a.alias+'</div><div class="acc-meta">'+a.time+' · '+a.size+'</div></div>';
+        h+='<div class="acc-actions">';
+        h+='<button class="btn btn-mint btn-sm" onclick="doSwitch(\''+a.alias+'\')">切换</button>';
+        h+='<button class="btn btn-coral btn-sm" onclick="doDelete(\''+a.alias+'\')">删除</button>';
+        h+='</div></div>';
+      });
+    }
+    h+='</div>';
+    ct.innerHTML=h;
+  }).catch(function(){
+    ct.innerHTML='<div class="empty"><div class="emoji">😿</div><div class="text">加载失败</div></div>';
+  });
+}
+
+// --- 操作 ---
+
+function doBackup(){
+  var alias=prompt('💕 为当前账号取个名字吧:');
+  if(!alias||!alias.trim())return;
+  alias=alias.trim();
+
+  var ct=document.getElementById('detail-content');
+  ct.innerHTML='<div class="loading"><div class="spin"></div><div class="loading-text">正在备份...</div></div>';
+
+  var body={game:currentGame,alias:alias};
+  if(currentGamePath)body.path=currentGamePath;
+  api('backup',body).then(function(d){
+    if(d.ok){
+      toast('备份成功: '+alias,'ok');
+      loadGameDetail(currentGame);
+    }else{
+      toast(d.error||'备份失败','err');
+      loadGameDetail(currentGame);
+    }
+  }).catch(function(){
+    toast('请求失败','err');
+    loadGameDetail(currentGame);
+  });
+}
+
+function doSwitch(alias){
+  showConfirm('切换账号','确认切换到「'+alias+'」？\n切换前会自动备份当前数据。',function(){
+    var ct=document.getElementById('detail-content');
+    ct.innerHTML='<div class="loading"><div class="spin"></div><div class="loading-text">正在切换...</div></div>';
+    api('restore',{alias:alias}).then(function(d){
+      if(d.ok){
+        toast('已切换: '+alias,'ok');
+        loadGameDetail(currentGame);
+      }else{
+        toast(d.error||'切换失败','err');
+        loadGameDetail(currentGame);
+      }
+    }).catch(function(){
+      toast('请求失败','err');
+      loadGameDetail(currentGame);
+    });
+  });
+}
+
+function doDelete(alias){
+  showConfirm('删除账号','确认删除「'+alias+'」？\n此操作不可恢复。',function(){
+    api('delete',{alias:alias}).then(function(d){
+      if(d.ok){
+        toast('已删除: '+alias,'ok');
+        loadGameDetail(currentGame);
+      }else{
+        toast(d.error||'删除失败','err');
+        loadGameDetail(currentGame);
+      }
+    }).catch(function(){
+      toast('请求失败','err');
+      loadGameDetail(currentGame);
+    });
+  });
+}
+
+// --- 初始化 ---
+loadGames();
+</script>
+</body>
+</html>

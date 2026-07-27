@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>清荷</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(180deg,#FFF0F5,#FFE4E1,#FFD6E0);color:#5D4E5F;min-height:100vh}
+.hd{background:linear-gradient(135deg,#FF6B9D,#FF85AB);padding:18px 16px 14px;text-align:center;position:relative;box-shadow:0 2px 12px rgba(255,107,157,0.25)}
+.hd .rb{font-size:28px;display:block;margin-bottom:2px}
+.hd h1{font-size:20px;color:#fff;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,0.1)}
+.hd s{font-size:11px;color:rgba(255,255,255,0.8)}
+.ct{padding:10px 14px 70px;max-width:460px;margin:0 auto}
+.dh{text-align:center;font-size:12px;letter-spacing:3px;margin:6px 0;color:#FFB8CC}
+
+.gc{background:#fff;border-radius:14px;padding:14px;margin-bottom:8px;box-shadow:0 2px 8px rgba(255,107,157,0.06);border:1px solid #FFE4EC;cursor:pointer;transition:transform .12s}
+.gc:active{transform:scale(0.98)}
+.gt{display:flex;align-items:center;gap:10px}
+.gi{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.gn{font-size:14px;font-weight:600;color:#5D4E5F}
+.gm{font-size:10px;color:#B8A9C6;margin-top:1px}
+.bdg{font-size:9px;padding:2px 7px;border-radius:6px;font-weight:500}
+.bok{background:#E8F5E9;color:#66BB6A}
+.bno{background:#F5F5F5;color:#C0B8C8}
+.arr{font-size:18px;color:#D4C4E0;margin-left:auto}
+
+.dtl{display:none}
+.dtl.on{display:block}
+.db{display:flex;align-items:center;gap:4px;font-size:13px;color:#FF6B9D;margin-bottom:12px;cursor:pointer;font-weight:500}
+.db:active{opacity:.7}
+
+.btn{display:block;width:100%;padding:13px;border:none;border-radius:13px;font-size:14px;font-weight:600;cursor:pointer;text-align:center;transition:opacity .12s;margin-bottom:7px}
+.btn:active{opacity:.75}
+.bp{background:linear-gradient(135deg,#FF6B9D,#FF85AB);color:#fff;box-shadow:0 3px 10px rgba(255,107,157,0.25)}
+.bm{background:linear-gradient(135deg,#98D8C8,#7EC8B0);color:#fff;box-shadow:0 3px 10px rgba(152,216,200,0.25)}
+.bc{background:linear-gradient(135deg,#FF8A80,#FF6E60);color:#fff;box-shadow:0 3px 8px rgba(255,138,128,0.2)}
+.bw{background:#fff;color:#FF6B9D;border:2px solid #FFE4EC}
+.bsm{padding:9px 13px;font-size:12px;border-radius:8px;display:inline-block;width:auto;margin:0}
+
+.as{margin-top:12px}
+.ast{font-size:12px;color:#B8A9C6;font-weight:600;margin-bottom:6px}
+.ai{background:#fff;border-radius:11px;padding:12px;margin-bottom:5px;display:flex;align-items:center;justify-content:space-between;border:1px solid #FFE4EC}
+.ail{flex:1;min-width:0}
+.aan{font-size:14px;font-weight:600;color:#5D4E5F}
+.aam{font-size:9px;color:#C0B8C8;margin-top:1px}
+.aia{display:flex;gap:5px;flex-shrink:0}
+
+.emp{text-align:center;padding:30px 0;color:#C0B8C8}
+.emp .em{font-size:40px}
+.emp .tx{font-size:13px;line-height:1.6;margin-top:6px}
+
+.ld{text-align:center;padding:30px 0}
+.sp{display:inline-block;width:22px;height:22px;border:3px solid #FFE4EC;border-top-color:#FF6B9D;border-radius:50%;animation:s .8s linear infinite;margin-bottom:6px}
+@keyframes s{to{transform:rotate(360deg)}}
+.lt{font-size:12px;color:#C0B8C8}
+
+.tst{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:9px 20px;border-radius:22px;font-size:12px;z-index:9;opacity:0;transition:.3s;font-weight:500}
+.tst.on{opacity:1}
+.tst.ok{background:#98D8C8;color:#fff}
+.tst.er{background:#FF8A80;color:#fff}
+.tst.in{background:rgba(0,0,0,0.75);color:#fff}
+
+.ps{background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #FFE4EC}
+.ps .pt{font-size:13px;font-weight:600;color:#5D4E5F}
+.ps .pp{font-size:10px;color:#B8A9C6;margin:2px 0 6px;word-break:break-all}
+</style>
+</head>
+<body>
+
+<div class="hd"><span class="rb">🎀</span><h1>清荷</h1><s>腾讯手游账号切换 · Hello Kitty</s></div>
+
+<div class="ct">
+  <div id="pg"><div class="dh">♥ ♥ ♥</div><div id="gl"><div class="ld"><div class="sp"></div><div class="lt">正在检测游戏...</div></div></div></div>
+  <div id="pd" class="dtl">
+    <div class="db" onclick="back()">← 返回游戏列表</div>
+    <div style="font-size:18px;font-weight:700;color:#5D4E5F;margin-bottom:2px" id="dn"></div>
+    <div style="font-size:11px;color:#B8A9C6;margin-bottom:14px" id="dm"></div>
+    <div id="dc"></div>
+  </div>
+</div>
+
+<div class="mo" id="mo" onclick="if(event.target===this)document.getElementById('mo').classList.remove('on')"><div class="md" id="md"></div></div>
+<div class="cf" id="cfo"><div class="cb"><h3 id="cft"></h3><p id="cfm"></p><div class="cr"><button class="btn bw" style="flex:1;margin:0" onclick="cfClose(false)">取消</button><button class="btn bp" style="flex:1;margin:0" id="cfk">确认</button></div></div></div>
+<div id="t" class="tst"></div>
+
+<script>
+var API='/data/adb/modules/qinghe/webroot/cgi-bin/api';
+var cg=null,cgd='',cgpt='',cgcl=false;
+
+function toast(m,c){var t=document.getElementById('t');t.className='tst '+(c||'in')+' on';t.textContent=m;setTimeout(function(){t.classList.remove('on')},2000)}
+function cfShow(tt,mm,cb){document.getElementById('cft').textContent=tt;document.getElementById('cfm').textContent=mm;document.getElementById('cfo').classList.add('on');document.getElementById('cfk').onclick=function(){cfClose(true)};window._cfcb=cb}
+function cfClose(ok){document.getElementById('cfo').classList.remove('on');if(ok&&window._cfcb)window._cfcb();window._cfcb=null}
+
+function api(action,pr,cb){
+  var cmd=API+' '+action;
+  if(pr&&pr!==0) for(var k in pr){cmd+=" "+k+"='"+String(pr[k]).replace(/'/g,"'\\''")+"'"}
+  ksu.exec(cmd).then(function(r){
+    if(r.errno!==0){cb({error:'执行失败'});return}
+    try{cb(JSON.parse(r.stdout))}catch(e){cb({error:'解析失败: '+r.stdout.slice(0,50)})}
+  }).catch(function(e){toast('无法执行命令','er');cb({error:'ksu.exec 不可用'})})
+}
+
+function gicon(n){
+  var m={sgame:{e:'👑',b:'#FFF0E0'},pubgm:{e:'🔫',b:'#E8F5E9'},cf:{e:'💣',b:'#FFEBEE'},dfm:{e:'🎯',b:'#F3E5F5'},valorant:{e:'⚡',b:'#E0F7FA'}};
+  return m[n]||{e:'🎮',b:'#F5F5F5'}
+}
+
+var ALL_GAMES=[
+  {name:'sgame',display:'王者荣耀',pkg:'com.tencent.tmgp.sgame',path:'/data/data/com.tencent.tmgp.sgame'},
+  {name:'pubgm',display:'和平精英',pkg:'com.tencent.tmgp.pubgmhd',path:'/data/data/com.tencent.tmgp.pubgmhd'},
+  {name:'cf',display:'CF手游',pkg:'com.tencent.tmgp.cf',path:'/data/data/com.tencent.tmgp.cf'},
+  {name:'dfm',display:'三角洲行动',pkg:'com.tencent.tmgp.dfm',path:'/data/data/com.tencent.tmgp.dfm'},
+  {name:'valorant',display:'无畏契约',pkg:'com.tencent.tmgp.valorant',path:'/data/data/com.tencent.tmgp.valorant'}
+];
+
+var _pths=null;
+var _detectDone=false;
+
+function loadGames(){
+  _detectDone=false;var el=document.getElementById('gl');
+  el.innerHTML='<div class="ld"><div class="sp"></div><div class="lt">正在检测游戏...</div></div>';
+  var t=setTimeout(function(){if(!_detectDone){_detectDone=true;showManual(el)}},5000);
+  api('detect',0,function(d){if(_detectDone)return;_detectDone=true;clearTimeout(t);renderGames(d,el)})
+}
+
+function showManual(el){
+  var h='<div class="emp"><div class="em">⏱️</div><div class="tx" style="font-size:12px;color:#FF6B9D;font-weight:600">检测超时</div><div class="tx">手动选择游戏并输入数据路径</div></div>';
+  ALL_GAMES.forEach(function(g){var ic=gicon(g.name);h+='<div class="gc" onclick="manualGame(\''+g.name+'\',\''+g.display+'\')"><div class="gt"><div class="gi" style="background:'+ic.b+'">'+ic.e+'</div><div style="flex:1"><div class="gn">'+g.display+'</div><div class="gm">'+g.pkg+'</div></div><span class="arr">›</span></div></div>'});
+  el.innerHTML=h
+}
+
+function manualGame(nm,dp){
+  var def='',g;for(var i=0;i<ALL_GAMES.length;i++){if(ALL_GAMES[i].name===nm){g=ALL_GAMES[i];def=g.path;break}}
+  var h=g?('包名: '+g.pkg+'\n默认路径:\n'+def+'\n\n确认或修改后点确定'):'输入数据路径';
+  var pt=prompt(dp+' '+h,def);if(!pt||!pt.trim())return;pt=pt.trim();openGame(nm,dp,'—',pt,false)
+}
+
+function renderGames(d,el){
+  var gs=d.games||[],i=gs.filter(function(g){return g.installed}),n=gs.filter(function(g){return !g.installed}),h='';
+  if(!i.length){h+='<div class="emp"><div class="em">🎮</div><div class="tx">未检测到已安装游戏</div></div>';
+    ALL_GAMES.forEach(function(g){var ic=gicon(g.name);h+='<div class="gc" onclick="manualGame(\''+g.name+'\',\''+g.display+'\')" style="opacity:0.85"><div class="gt"><div class="gi" style="background:#F0F0F0">📂</div><div style="flex:1"><div class="gn">'+g.display+'</div><div class="gm">手动指定路径备份</div></div><span class="arr">›</span></div></div>'})}
+  else i.forEach(function(g){var ic=gicon(g.name);var lb=g.clone?' · 分身':'';var pt=g.path||'';var cj=''+!!g.clone;h+='<div class="gc" onclick="openGame(\''+g.name+'\',\''+g.display+lb+'\',\''+(g.size||'—')+'\',\''+pt+'\','+cj+')"><div class="gt"><div class="gi" style="background:'+ic.b+'">'+ic.e+'</div><div style="flex:1"><div class="gn">'+g.display+lb+'</div><div class="gm">'+g.pkg+' · 数据: '+(g.size||'—')+'</div></div><span class="bdg bok">'+(g.clone?'分身':'已安装')+'</span><span class="arr">›</span></div></div>'});
+  el.innerHTML=h
+}
+
+function openGame(nm,dp,sz,pt,cl){
+  cg=nm;cgd=dp;cgpt=pt||'';cgcl=!!cl;var ic=gicon(nm);
+  document.getElementById('pg').style.display='none';document.getElementById('pd').classList.add('on');
+  document.getElementById('dn').textContent=ic.e+' '+dp;document.getElementById('dm').textContent='数据大小: '+sz;
+  loadDetail()
+}
+
+function back(){document.getElementById('pd').classList.remove('on');document.getElementById('pg').style.display='';loadGames()}
+
+function loadDetail(){
+  var ct=document.getElementById('dc');ct.innerHTML='<div class="ld"><div class="sp"></div><div class="lt">加载中...</div></div>';
+  _pths=null;
+  // 并行加载路径检测 + 账号列表
+  var _done=0;
+  function _tryRender(){_done++;if(_done<2)return;
+    var h='';
+    // 路径区块
+    if(_pths&&(_pths.main.exists||_pths.clones.length)){
+      h+='<div style="font-size:12px;color:#B8A9C6;font-weight:600;margin-bottom:6px">备份数据源</div>';
+      if(_pths.main.exists)h+='<div class="ps"><div class="pt">主应用</div><div class="pp">'+_pths.main.path+'</div><button class="btn bp bsm" onclick="startBackup(\''+_pths.main.path+'\')">备份主应用</button></div>';
+      _pths.clones.forEach(function(c){h+='<div class="ps"><div class="pt">分身 · 用户'+c.uid+'</div><div class="pp">'+c.path+'</div><button class="btn bp bsm" onclick="startBackup(\''+c.path+'\')">备份分身</button></div>'});
+    }else{
+      h+='<div class="ps"><div class="pt">未检测到游戏数据</div><div class="pp">游戏可能未安装或路径异常</div><button class="btn bp bsm" onclick="manualGame(cg,cgd)">手动指定路径</button></div>';
+    }
+    // 账号列表
+    h+='<div class="as"><div class="ast">已备份账号 ('+(_accts||[]).length+')</div>';
+    if(!_accts.length)h+='<div class="emp"><div class="em">📭</div><div class="tx">还没有备份过账号</div></div>';
+    else _accts.forEach(function(a){h+='<div class="ai"><div class="ail"><div class="aan">'+a.alias+'</div><div class="aam">'+a.time+' · '+a.size+'</div></div><div class="aia"><button class="btn bm bsm" onclick="doRestore(\''+a.alias+'\')">恢复</button><button class="btn bc bsm" onclick="doDel(\''+a.alias+'\')">删除</button></div></div>'});
+    h+='</div>';ct.innerHTML=h
+  }
+  api('detect_game',{name:cg},function(d){_pths=d;_tryRender()});
+  var _accts=[];
+  api('accounts',{game:cg},function(d){_accts=d.accounts||[];_tryRender()})
+}
+
+function startBackup(pt){
+  document.getElementById('md').innerHTML='<h3>备份当前账号</h3><p style="font-size:10px;color:#B8A9C6;word-break:break-all;margin-bottom:10px">路径: '+pt+'</p><input id="bakn" placeholder="自定义名称 (如: 大号、小号)" style="width:100%;padding:10px 12px;border:2px solid #FFE4EC;border-radius:10px;font-size:14px;outline:none;background:#FFF8FA;color:#5D4E5F;margin-bottom:8px"><div style="display:flex;gap:6px"><button class="btn bw" style="flex:1;margin:0" onclick="document.getElementById(\'mo\').classList.remove(\'on\')">取消</button><button class="btn bp" style="flex:1;margin:0" onclick="doBackup(\''+pt+'\')">确认备份</button></div>';
+  document.getElementById('mo').classList.add('on')
+}
+
+function doBackup(pt){
+  var a=document.getElementById('bakn').value.trim();if(!a){toast('请输入名称','er');return}
+  document.getElementById('mo').classList.remove('on');
+  document.getElementById('dc').innerHTML='<div class="ld"><div class="sp"></div><div class="lt">正在备份...</div></div>';
+  var bd={game:cg,alias:a};if(pt)bd.path=pt;api('backup',bd,function(d){if(d.ok){toast('备份成功: '+a,'ok');loadDetail()}else{toast(d.error||'失败','er');loadDetail()}})
+}
+
+function doRestore(al){
+  cfShow('恢复账号','确认恢复到「'+al+'」？<br>切换前会自动备份当前数据。',function(){
+    document.getElementById('dc').innerHTML='<div class="ld"><div class="sp"></div><div class="lt">正在恢复...</div></div>';
+    api('restore',{alias:al},function(d){if(d.ok){toast('已恢复: '+al,'ok');loadDetail()}else{toast(d.error||'失败','er');loadDetail()}})
+  })
+}
+
+function doDel(al){
+  cfShow('删除账号','确认删除「'+al+'」？<br>此操作不可恢复。',function(){
+    api('delete',{alias:al},function(d){if(d.ok){toast('已删除: '+al,'ok');loadDetail()}else{toast(d.error||'失败','er');loadDetail()}})
+  })
+}
+
+loadGames();
+</script>
+</body>
+</html>
