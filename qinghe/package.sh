@@ -7,7 +7,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 RELEASE_DIR="$SCRIPT_DIR/release"
-VERSION="v2.1.0"
+VERSION="v2.2.0"
 
 mkdir -p "$RELEASE_DIR"
 
@@ -27,6 +27,7 @@ mkdir -p "$MODULE_TMP"
 
 cp "$SCRIPT_DIR/qinghe.sh" "$MODULE_TMP/"
 cp -r "$SCRIPT_DIR/lib" "$MODULE_TMP/"
+cp -r "$SCRIPT_DIR/web" "$MODULE_TMP/"
 cp -r "$SCRIPT_DIR/module/META-INF" "$MODULE_TMP/"
 cp "$SCRIPT_DIR/module/module.prop" "$MODULE_TMP/"
 cp "$SCRIPT_DIR/module/customize.sh" "$MODULE_TMP/"

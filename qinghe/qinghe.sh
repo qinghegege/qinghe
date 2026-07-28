@@ -18,7 +18,9 @@ show_help() {
     echo "  save <包名>    存号（备份五目录）"
     echo "  login <包名>   上号（恢复五目录）"
     echo "  list           查看已保存账号"
-    echo "  help           显示此帮助"
+    echo "    web <端口>   启动 Web UI (默认端口 8848)
+  help           显示此帮助
+"
     echo ""
     echo "无参数启动交互菜单"
 }
@@ -91,6 +93,14 @@ case "${1:-}" in
         ;;
     list)
         list_accounts
+        ;;
+    web)
+        WEB_SCRIPT="$SCRIPT_DIR/web/server.sh"
+        if [ -f "$WEB_SCRIPT" ]; then
+            sh "$WEB_SCRIPT" "${2:-8848}"
+        else
+            die "Web 服务脚本未找到: $WEB_SCRIPT"
+        fi
         ;;
     help|-h|--help)
         show_help

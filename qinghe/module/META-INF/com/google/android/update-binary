@@ -18,7 +18,7 @@ api_level_arch_detect 2>/dev/null || true
 MODPATH=/data/adb/modules/qinghe
 
 ui_print "====================================="
-ui_print "  清荷 v2.1.0"
+ui_print "  清荷 v2.2.0"
 ui_print "  腾讯手游账号本地切换器"
 ui_print "====================================="
 
@@ -45,8 +45,9 @@ chmod 755 "$MODPATH/system/bin/qh" 2>/dev/null
 
 ui_print ""
 ui_print "安装完成!"
-ui_print "  qh save <包名>   存号 (备份五目录)"
-ui_print "  qh login <包名>  上号 (恢复五目录)"
+ui_print "  qh save <包名>   存号"
+ui_print "  qh login <包名>  上号"
+ui_print "  qh web [端口]    启动 Web UI"
 ui_print "  qh list          查看已保存"
 ui_print "  qh               交互菜单"
 ui_print "====================================="
