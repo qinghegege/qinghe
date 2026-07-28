@@ -351,6 +351,8 @@ var selectedPkg = '';
 var selectedUid = '';
 var uids = [];
 
+var _isKsu = (typeof ksu !== 'undefined' && ksu && typeof ksu.exec === 'function');
+
 var games = [
   { name:'和平精英', pkg:'com.tencent.tmgp.pubgmhd', icon:'' },
   { name:'王者荣耀', pkg:'com.tencent.tmgp.sgame', icon:'' },
@@ -376,25 +378,39 @@ function toast(msg, type) {
 }
 
 function api(action, params) {
-  var qs = 'action=' + encodeURIComponent(action);
+  var qs = '';
+  if (params) {
+    var pairs = [];
+    for (var k in params) {
+      if (params.hasOwnProperty(k)) pairs.push(k + '=' + params[k]);
+    }
+    qs = pairs.join('&');
+  }
+
+  if (_isKsu) {
+    var query = 'action=' + action;
+    if (qs) query += '&' + qs;
+    var safe = query.replace(/'/g, "'\\''");
+    return ksu.exec("QUERY_STRING='" + safe + "' sh /data/adb/modules/qinghe/web/cgi-bin/api.sh")
+      .then(function(r) {
+        var out = (typeof r === 'string') ? r : (r.stdout || JSON.stringify(r));
+        try { return JSON.parse(out); }
+        catch(e) { return {ok:false, error: out}; }
+      });
+  }
+
+  var url = 'action=' + encodeURIComponent(action);
   if (params) {
     for (var k in params) {
-      qs += '&' + k + '=' + encodeURIComponent(params[k]);
+      if (params.hasOwnProperty(k)) url += '&' + k + '=' + encodeURIComponent(params[k]);
     }
   }
-  return fetch('/cgi-bin/api.sh?' + qs)
+  return fetch('/cgi-bin/api.sh?' + url)
     .then(function(r){ return r.json(); })
-    .catch(function(e){ return {ok:false,error:'网络错误: '+e.message}; });
+    .catch(function(e){ return {ok:false,error:'offline'}; });
 }
 
 function selectGame(pkg, name) {
-  selectedPkg = pkg;
-  document.querySelectorAll('.game-card').forEach(function(c){ c.classList.remove('selected'); });
-  var el = document.getElementById('card_' + pkg.replace(/\./g,'_'));
-  if (el) el.classList.add('selected');
-  document.getElementById('manualPkg').value = pkg;
-  loadUids(pkg);
-}
 
 document.getElementById('btnManualSelect').addEventListener('click', function(){
   var pkg = document.getElementById('manualPkg').value.trim();
