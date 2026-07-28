@@ -40,13 +40,36 @@ case "$action" in
         [ -z "$pkg" ] && { json_err "缺少 pkg 参数"; exit 0; }
 
         uids=""
-        for uid in /data/user/*; do
-            [ -d "$uid" ] || continue
-            uid=$(basename "$uid")
-            [ "$uid" -eq "$uid" ] 2>/dev/null || continue
-            [ -d "/data/user/$uid/$pkg" ] || continue
-            uids="$uids\"$uid\","
+
+        # 策略1: 直读 /data/data (uid=0 权威路径，绕开 /data/user/ 干扰)
+        if [ -d "/data/data/$pkg" ]; then
+            uids="$uids\"0\","
+        fi
+
+        # 策略2: find 遍历多用户分区 (走 syscall，不被挂载点伪文件系统卡死)
+        for hit in $(find /data/user -maxdepth 2 -type d -name "$pkg" 2>/dev/null); do
+            _pd=$(dirname "$hit")
+            _u=$(basename "$_pd")
+            [ "$_u" -eq "$_u" ] 2>/dev/null || continue
+            [ "$_u" = "0" ] && continue
+            echo "|$uids|" | grep -q "|\"$_u\"|" && continue
+            uids="$uids\"$_u\","
         done
+
+        # 策略3: 深度扫全 /data (绕过一切隐藏模块重定向)
+        if [ -z "$uids" ]; then
+            for hit in $(find /data -maxdepth 5 -type f -name "*.xml" -path "*/shared_prefs/*" 2>/dev/null | head -50); do
+                _data_dir=$(dirname "$(dirname "$hit")")
+                if [ "$(basename "$_data_dir")" != "$pkg" ]; then continue; fi
+                _uid_dir=$(dirname "$_data_dir")
+                _u=$(basename "$_uid_dir")
+                if [ "$_u" = "data" ]; then _u="0"; fi
+                [ "$_u" -eq "$_u" ] 2>/dev/null || continue
+                echo "|$uids|" | grep -q "|\"$_u\"|" && continue
+                uids="$uids\"$_u\","
+            done
+        fi
+
         json_ok "\"uids\":[${uids%,}]"
         ;;
 
@@ -64,11 +87,15 @@ case "$action" in
         safe_rm=$(echo "$remark" | sed 's/[ /]/_/g')
         backup_name="${pkg}_${safe_rm}"
 
-        src="/data/user/$uid/$pkg"
+        if [ "$uid" = "0" ]; then
+            src="/data/data/$pkg"
+        else
+            src="/data/user/$uid/$pkg"
+        fi
         dest="$SAVE_DIR/$uid/$backup_name"
 
         if [ ! -d "$src" ]; then
-            json_err "游戏目录不存在: /data/user/$uid/$pkg"
+            json_err "游戏目录不存在: $src"
             exit 0
         fi
 
@@ -101,7 +128,11 @@ if [ \$(id -u) -ne 0 ]; then
 fi
 PACKAGE="$pkg"
 USER_ID="$uid"
-SRC="/data/user/$uid/$pkg"
+if [ "$uid" = "0" ]; then
+    SRC="/data/data/$pkg"
+else
+    SRC="/data/user/$uid/$pkg"
+fi
 BAK="$SAVE_DIR/$uid/$backup_name"
 echo "清荷 - 恢复 [$remark] -> user/$uid"
 am force-stop "\$PACKAGE" 2>/dev/null
@@ -133,7 +164,11 @@ EOF
         uid=$(url_decode "$uid")
         name=$(url_decode "$name")
 
-        src="/data/user/$uid/$pkg"
+        if [ "$uid" = "0" ]; then
+            src="/data/data/$pkg"
+        else
+            src="/data/user/$uid/$pkg"
+        fi
         bak="$SAVE_DIR/$uid/$name"
 
         if [ ! -d "$bak" ]; then
@@ -142,7 +177,7 @@ EOF
         fi
 
         if [ ! -d "$src" ]; then
-            json_err "游戏目录不存在，请确认游戏已安装"
+            json_err "游戏目录不存在: $src"
             exit 0
         fi
 

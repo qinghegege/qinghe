@@ -7,10 +7,15 @@
 
 get_all_uid() {
     _uid_list=""
-    for dir in /data/user/*; do
-        [ -d "$dir" ] || continue
+
+    # Always include uid 0 if /data/data exists (canonical)
+    [ -d "/data/data" ] && _uid_list="$_uid_list 0"
+
+    # find-based multi-user scan (won't hang on stuck mounts)
+    for dir in $(find /data/user -maxdepth 1 -type d 2>/dev/null); do
         _uid=$(basename "$dir")
         [ "$_uid" -eq "$_uid" ] 2>/dev/null || continue
+        [ "$_uid" = "0" ] && continue
         _uid_list="$_uid_list $_uid"
     done
     echo "${_uid_list# }"
@@ -48,7 +53,12 @@ backup_account() {
 
     _vlist=""
     for uid in $(get_all_uid); do
-        [ -d "/data/user/$uid/$pkg" ] || continue
+        if [ "$uid" = "0" ]; then
+            _check="/data/data/$pkg"
+        else
+            _check="/data/user/$uid/$pkg"
+        fi
+        [ -d "$_check" ] || continue
         _vlist="$_vlist $uid"
     done
 
@@ -100,7 +110,11 @@ do_backup() {
     pkg="$2"
     remark="$3"
 
-    src="/data/user/$uid/$pkg"
+    if [ "$uid" = "0" ]; then
+        src="/data/data/$pkg"
+    else
+        src="/data/user/$uid/$pkg"
+    fi
 
     [ -z "$remark" ] && remark="未命名"
     safe_rm=$(echo "$remark" | sed 's/[ /]/_/g')
@@ -162,7 +176,11 @@ generate_restore_script() {
     mkdir -p "$SAVE_DIR/restore_scripts" 2>/dev/null
     script_file="$SAVE_DIR/restore_scripts/${backup_name}.sh"
     bak="$SAVE_DIR/$uid/$backup_name"
-    src="/data/user/$uid/$pkg"
+    if [ "$uid" = "0" ]; then
+        src="/data/data/$pkg"
+    else
+        src="/data/user/$uid/$pkg"
+    fi
 
     cat > "$script_file" << EOF
 #!/system/bin/sh
@@ -172,7 +190,7 @@ if [ \$(id -u) -ne 0 ]; then
 fi
 PACKAGE="$pkg"
 USER_ID="$uid"
-SRC="/data/user/$uid/$pkg"
+SRC="$src"
 BAK="$bak"
 echo "清荷 - 恢复 [$remark] -> user/$uid"
 am force-stop "\$PACKAGE" 2>/dev/null
@@ -263,7 +281,11 @@ restore_account() {
 
     [ -z "$_bak" ] && { warn "选择无效"; return 1; }
 
-    src="/data/user/$_sel_uid/$pkg"
+    if [ "$_sel_uid" = "0" ]; then
+        src="/data/data/$pkg"
+    else
+        src="/data/user/$_sel_uid/$pkg"
+    fi
     [ ! -d "$src" ] && { warn "目标目录 $src 不存在，游戏可能未安装"; return 1; }
 
     info "恢复 [$_sel_uid] $_remark"
