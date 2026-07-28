@@ -1,167 +1,175 @@
 #!/system/bin/sh
 #===============================================================================
-# 清荷 - 账号管理模块
+# 清荷 - 存号/上号核心逻辑
 #===============================================================================
 
-generate_auto_alias() {
-    _ts="$(date '+%Y%m%d-%H%M%S')"
-    echo "自动备份-$_ts"
+get_all_uid() {
+    local uid_list=()
+    for dir in /data/user/*; do
+        local uid=$(basename "$dir")
+        if [ "$uid" -eq "$uid" ] 2>/dev/null; then
+            uid_list+=("$uid")
+        fi
+    done
+    echo "${uid_list[@]}"
 }
 
-path_hash() {
-    _path="$1"
-    echo "$_path" | md5sum 2>/dev/null | cut -d' ' -f1 | head -c8
-    if [ -z "$_hash" ]; then
-        echo "$_path" | sha256sum 2>/dev/null | cut -d' ' -f1 | head -c8
-    fi
-    if [ -z "$_hash" ]; then
-        echo "$_path" | sed 's/[^a-zA-Z0-9]/_/g' | head -c16
-    fi
-}
+do_save() {
+    local uid="$1"
+    local pkg="$2"
+    local remark="$3"
 
-account_backup() {
-    _game="$1"
-    _alias="$2"
-    _src_path="$3"
-    _mode="${4:-custom}"
+    mkdir -p "$SAVE_DIR/$uid"
+    local src="/data/user/$uid/$pkg/files/itop_login.txt"
+    local dst
+    if [ -n "$remark" ]; then
+        dst="$SAVE_DIR/$uid/${remark}_${pkg}_itop_login.txt"
+    else
+        dst="$SAVE_DIR/$uid/${pkg}_itop_login.txt"
+    fi
 
-    if ! is_valid_game "$_game"; then
-        log_err "未知游戏: $_game"
+    if [ ! -f "$src" ]; then
+        echo "失败: 文件不存在 $src"
         return 1
     fi
 
-    if [ -z "$_src_path" ]; then
-        _src_path="$(get_data_path "$_game")"
-    fi
-
-    if [ ! -d "$_src_path" ]; then
-        log_err "游戏数据目录不存在: $_src_path"
-        return 1
-    fi
-
-    _display="$(get_display_name "$_game")"
-    _pkg="$(get_pkg_name "$_game")"
-
-    _phash="$(path_hash "$_src_path")"
-    _target_dir="$ACCOUNTS_DIR/$_game/$_phash/$_alias"
-
-    if [ -d "$_target_dir" ]; then
-        log_err "备份 '$_alias' 已存在, 请更换名称"
-        return 1
-    fi
-
-    mkdir -p "$_target_dir/data"
-
-    log_info "备份中..."
-    log_info "  游戏: $_display"
-    log_info "  来源: $_src_path"
-    log_info "  别名: $_alias"
-    log_info "  模式: $_mode"
-
-    cp -r "$_src_path"/. "$_target_dir/data/" 2>/dev/null
-    if [ $? -ne 0 ]; then
-        log_err "备份失败: 文件复制错误"
-        rm -rf "$_target_dir"
-        return 1
-    fi
-
-    _size="$(get_dir_size "$_target_dir/data")"
-    _ts="$(date '+%Y-%m-%d %H:%M:%S')"
-    _is_clone="false"
-
-    case "$_src_path" in
-        /data/user/*) _is_clone="true" ;;
-    esac
-
-    cat > "$_target_dir/meta.json" <<META
-{
-  "alias": "$_alias",
-  "game": "$_game",
-  "display": "$_display",
-  "pkg": "$_pkg",
-  "path": "$_src_path",
-  "is_clone": $_is_clone,
-  "mode": "$_mode",
-  "created_at": "$_ts",
-  "data_size": "$_size"
-}
-META
-
-    log_ok "备份完成: $_alias ($_size)"
-    return 0
+    cp "$src" "$dst"
+    echo "保存完成: user/$uid -> $dst"
 }
 
-account_list() {
-    _game="$1"
-    _path_filter="$2"
+save_account() {
+    local pkg="$1"
 
-    _search_dir="$ACCOUNTS_DIR"
-    [ -n "$_game" ] && _search_dir="$ACCOUNTS_DIR/$_game"
-
-    _found=""
-    for _meta in $(find "$_search_dir" -name meta.json 2>/dev/null); do
-        [ -f "$_meta" ] || continue
-
-        _al="$(grep '"alias"' "$_meta" | head -1 | sed 's/.*"alias": *"//;s/".*//')"
-        _gn="$(grep '"game"' "$_meta" | head -1 | sed 's/.*"game": *"//;s/".*//')"
-        _tm="$(grep '"created_at"' "$_meta" | head -1 | sed 's/.*"created_at": *"//;s/".*//')"
-        _sz="$(grep '"data_size"' "$_meta" | head -1 | sed 's/.*"data_size": *"//;s/".*//')"
-        _dp="$(grep '"display"' "$_meta" | head -1 | sed 's/.*"display": *"//;s/".*//')"
-        _mp="$(grep '"path"' "$_meta" | head -1 | sed 's/.*"path": *"//;s/".*//')"
-
-        [ -n "$_path_filter" ] && [ "$_mp" != "$_path_filter" ] && continue
-
-        [ -n "$_found" ] && _found="$_found,"
-        _found="${_found}{\"alias\":\"$_al\",\"game\":\"$_gn\",\"display\":\"$_dp\",\"time\":\"$_tm\",\"size\":\"$_sz\",\"path\":\"$_mp\"}"
+    local valid_uids=()
+    local all_uids=($(get_all_uid))
+    for uid in "${all_uids[@]}"; do
+        if [ -f "/data/user/$uid/$pkg/files/itop_login.txt" ]; then
+            valid_uids+=("$uid")
+        fi
     done
 
-    echo "[${_found}]"
-}
-
-account_info() {
-    _alias="$1"
-    _meta="$(find "$ACCOUNTS_DIR" -name meta.json -exec grep -l "\"alias\": *\"$_alias\"" {} \; 2>/dev/null | head -1)"
-
-    if [ -z "$_meta" ] || [ ! -f "$_meta" ]; then
-        log_err "账号不存在: $_alias"
+    if [ ${#valid_uids[@]} -eq 0 ]; then
+        echo "未在任何 user 分区找到该游戏的登录文件!"
         return 1
     fi
 
-    cat "$_meta"
-    return 0
+    echo "检测到以下可用账号分区："
+    local i=1
+    for uid in "${valid_uids[@]}"; do
+        echo "  $i. user/$uid"
+        i=$((i+1))
+    done
+    echo "  $i. 一键批量保存全部"
+
+    echo -n "请选择序号："
+    read sel
+
+    if [ "$sel" = "$i" ]; then
+        echo -n "批量备注（留空则无备注）："
+        read batch_rm
+        echo ""
+        for uid in "${valid_uids[@]}"; do
+            do_save "$uid" "$pkg" "$batch_rm"
+        done
+        echo "全部账号批量保存完毕"
+    else
+        local idx=$((sel - 1))
+        local uid="${valid_uids[$idx]}"
+
+        echo "1. 无备注"
+        echo "2. 自定义备注"
+        echo -n "选择："
+        read opt
+        local rm=""
+        if [ "$opt" = "2" ]; then
+            echo -n "输入备注："
+            read rm
+        fi
+        do_save "$uid" "$pkg" "$rm"
+    fi
 }
 
-account_delete() {
-    _alias="$1"
-    _auto_confirm="$2"
+restore_account() {
+    local pkg="$1"
 
-    _meta="$(find "$ACCOUNTS_DIR" -name meta.json -exec grep -l "\"alias\": *\"$_alias\"" {} \; 2>/dev/null | head -1)"
+    local files=()
+    local file_uids=()
+    for subdir in "$SAVE_DIR"/*; do
+        [ -d "$subdir" ] || continue
+        local uid=$(basename "$subdir")
+        if [ "$uid" -eq "$uid" ] 2>/dev/null; then
+            for f in "$subdir"/*; do
+                [ -f "$f" ] || continue
+                local fname=$(basename "$f")
+                if echo "$fname" | grep -q "$pkg"; then
+                    files+=("$fname")
+                    file_uids+=("$uid")
+                fi
+            done
+        fi
+    done
 
-    if [ -z "$_meta" ] || [ ! -f "$_meta" ]; then
-        log_err "账号不存在: $_alias"
+    if [ ${#files[@]} -eq 0 ]; then
+        echo "未找到包含 $pkg 的账号文件!"
         return 1
     fi
 
-    if [ "$_auto_confirm" != "1" ]; then
-        _gn="$(grep '"game"' "$_meta" | head -1 | sed 's/.*"game": *"//;s/".*//')"
-        _dp="$(grep '"display"' "$_meta" | head -1 | sed 's/.*"display": *"//;s/".*//')"
-        _tm="$(grep '"created_at"' "$_meta" | head -1 | sed 's/.*"created_at": *"//;s/".*//')"
-        echo ""
-        log_warn "将删除以下账号:"
-        echo "  别名: $_alias"
-        echo "  游戏: $_dp"
-        echo "  时间: $_tm"
-        echo ""
-        printf "确认删除? [y/N]: "
-        read -r _confirm
-        case "$_confirm" in
-            [Yy]*) ;;
-            *) log_info "已取消"; return 1 ;;
-        esac
+    echo "匹配到以下账号文件："
+    local i=1
+    for idx in "${!files[@]}"; do
+        echo "  $((i)). [user/${file_uids[$idx]}] ${files[$idx]}"
+        i=$((i+1))
+    done
+
+    echo -n "选择要使用的文件序号："
+    read sel
+    local idx=$((sel - 1))
+    local file_name="${files[$idx]}"
+    local target_uid="${file_uids[$idx]}"
+    local src="$SAVE_DIR/$target_uid/$file_name"
+
+    local dest_dir="/data/user/$target_uid/$pkg/files"
+    local dest_file="$dest_dir/itop_login.txt"
+
+    mkdir -p "$dest_dir"
+
+    if [ -f "$dest_file" ]; then
+        echo "目标目录已存在 itop_login.txt"
+        echo "1. 覆盖导入"
+        echo "2. 取消"
+        echo -n "选择："
+        read opt
+        if [ "$opt" != "1" ]; then
+            echo "已取消"
+            return 0
+        fi
+        rm -f "$dest_file"
     fi
 
-    _acct_dir="$(dirname "$_meta")"
-    rm -rf "$_acct_dir"
-    log_ok "已删除: $_alias"
-    return 0
+    cp "$src" "$dest_file"
+    chmod 777 "$dest_file"
+    echo "上号完成: $src -> /data/user/$target_uid/$pkg/files/"
+}
+
+list_accounts() {
+    echo "存储位置: $SAVE_DIR"
+    echo ""
+    if [ ! -d "$SAVE_DIR" ]; then
+        echo "(暂无保存的账号)"
+        return
+    fi
+
+    local count=0
+    for subdir in "$SAVE_DIR"/*; do
+        [ -d "$subdir" ] || continue
+        local uid=$(basename "$subdir")
+        echo "--- user/$uid ---"
+        for f in "$subdir"/*; do
+            [ -f "$f" ] || continue
+            echo "  $(basename "$f")"
+            count=$((count+1))
+        done
+        echo ""
+    done
+    echo "共 $count 个账号"
 }

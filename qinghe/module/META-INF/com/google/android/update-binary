@@ -1,7 +1,6 @@
 #!/sbin/sh
 #===============================================================================
 # 清荷 - Magisk/KSU 模块安装入口
-# 标准 Magisk 模块: module.prop 在 zip 根目录, Magisk 自动处理解压
 #===============================================================================
 
 umask 022
@@ -16,12 +15,12 @@ mount /data 2>/dev/null
 
 api_level_arch_detect 2>/dev/null || true
 
+MODPATH=/data/adb/modules/qinghe
+
 ui_print "====================================="
-ui_print "  清荷 v1.1.0"
+ui_print "  清荷 v2.0.0"
 ui_print "  腾讯手游账号本地切换器"
 ui_print "====================================="
-
-MODPATH=/data/adb/modules/qinghe
 
 ui_print "- 解压模块文件..."
 mkdir -p $MODPATH 2>/dev/null
@@ -32,29 +31,24 @@ ui_print "- 设置权限..."
 chmod -R 755 $MODPATH 2>/dev/null
 chmod 755 $MODPATH/qinghe.sh 2>/dev/null
 chmod 755 $MODPATH/lib/*.sh 2>/dev/null
-chmod 755 $MODPATH/web/server.sh 2>/dev/null
-chmod 755 $MODPATH/web/api.sh 2>/dev/null
 
 ui_print "- 创建数据目录..."
-mkdir -p /data/qinghe/accounts 2>/dev/null
-mkdir -p /data/qinghe/snapshots 2>/dev/null
+mkdir -p /data/qinghe 2>/dev/null
 
 ui_print "- 安装全局命令..."
-mkdir -p $MODPATH/system/bin 2>/dev/null
-cat > $MODPATH/system/bin/qh << 'QHEOF'
+mkdir -p "$MODPATH/system/bin" 2>/dev/null
+cat > "$MODPATH/system/bin/qh" << 'QHEOF'
 #!/system/bin/sh
-QINGHE_HOME=/data/adb/modules/qinghe
-export QH_DATA_DIR=/data/qinghe
-exec "$QINGHE_HOME/qinghe.sh" "$@"
+exec /data/adb/modules/qinghe/qinghe.sh "$@"
 QHEOF
-chmod 755 $MODPATH/system/bin/qh 2>/dev/null
+chmod 755 "$MODPATH/system/bin/qh" 2>/dev/null
 
 ui_print ""
 ui_print "安装完成!"
-ui_print ""
-ui_print "  qh       命令行模式"
-ui_print "  qh web   启动 Web UI (端口 8848)"
-ui_print ""
+ui_print "  qh save <包名>   存号"
+ui_print "  qh login <包名>  上号"
+ui_print "  qh list          查看已保存"
+ui_print "  qh               交互菜单"
 ui_print "====================================="
 
 exit 0
