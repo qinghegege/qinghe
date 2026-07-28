@@ -184,22 +184,22 @@ body{
 <div class="header">
   <span class="ribbon">🎀</span>
   <h1>清荷</h1>
-  <span class="ver">v1.0.2</span>
+  <span class="ver">v1.1.0</span>
 </div>
 
 <div class="container">
 
-  <div id="page-loading" class="page on">
+  <div id="page-games" class="page on">
+    <div class="heart-line">♥ ♥ ♥</div>
+    <div id="games-list"></div>
+  </div>
+
+  <div id="page-loading" class="page">
     <div class="heart-line">♥ ♥ ♥</div>
     <div class="loading">
       <div class="spin"></div>
-      <div class="loading-text" id="loading-msg">正在检测游戏...</div>
+      <div class="loading-text">加载中...</div>
     </div>
-  </div>
-
-  <div id="page-games" class="page">
-    <div class="heart-line">♥ ♥ ♥</div>
-    <div id="games-list"></div>
   </div>
 
   <div id="page-paths" class="page">
@@ -259,8 +259,7 @@ var STATE={
   currentGameDisplay:'',
   currentPath:'',
   currentIsClone:false,
-  selectedBackup:null,
-  detectTimer:null
+  selectedBackup:null
 };
 
 function api(path,params){
@@ -312,78 +311,24 @@ function gameIcon(name){
   return {emoji:m[name]||'🎮',bg:b[name]||'#F5F5F5'};
 }
 
-// === 页面1: 加载 ===
-function startDetect(){
-  STATE.detectTimer=setTimeout(function(){
-    document.getElementById('loading-msg').textContent='检测超时, 显示预置列表...';
-    setTimeout(function(){
-      showPage('games');
-      renderPresetGames();
-    },600);
-  },10000);
+// === 页面1: 游戏列表 ===
 
-  api('detect').then(function(d){
-    clearTimeout(STATE.detectTimer);
-    showPage('games');
-    renderGames(d.games||[]);
-  }).catch(function(){
-    clearTimeout(STATE.detectTimer);
-    showPage('games');
-    renderPresetGames();
-  });
-}
-
-function renderPresetGames(){
+renderPresetGames();
   var preset=[
     {name:'sgame',display:'王者荣耀',pkg:'com.tencent.tmgp.sgame',path:'/data/data/com.tencent.tmgp.sgame'},
     {name:'pubgm',display:'和平精英',pkg:'com.tencent.tmgp.pubgmhd',path:'/data/data/com.tencent.tmgp.pubgmhd'},
     {name:'dfm',display:'三角洲行动',pkg:'com.tencent.tmgp.dfm',path:'/data/data/com.tencent.tmgp.dfm'},
     {name:'valorant',display:'无畏契约',pkg:'com.tencent.tmgp.valorant',path:'/data/data/com.tencent.tmgp.valorant'},
     {name:'cf',display:'CF手游',pkg:'com.tencent.tmgp.cf',path:'/data/data/com.tencent.tmgp.cf'}
-  ];
-  var tip='<div style="font-size:11px;color:var(--coral);text-align:center;margin-bottom:10px">自动检测超时, 请从下方选择游戏</div>';
-  var h=tip;
+   ];
+  var h='';
   preset.forEach(function(g){
     var icon=gameIcon(g.name);
     h+='<div class="card selectable" onclick="selectGame(\''+g.name+'\',\''+g.display+'\',\''+g.path+'\')">';
     h+='<div class="card-row"><div class="card-icon" style="background:'+icon.bg+'">'+icon.emoji+'</div>';
     h+='<div class="card-info"><div class="card-title">'+g.display+'</div><div class="card-meta">'+g.pkg+'</div></div>';
-    h+='<span class="badge-off card-badge">预置</span></div></div>';
-  });
-  document.getElementById('games-list').innerHTML=h;
-}
-
-function renderGames(games){
-  var h='';
-  var installed=games.filter(function(g){return g.installed||(g.clone&&g.clone.installed)});
-  var notInstalled=games.filter(function(g){return !g.installed&&(!g.clone||!g.clone.installed)});
-
-  if(installed.length===0){
-    h+='<div class="empty"><div class="icon">🎮</div><div class="text">未检测到已安装的腾讯手游<br><br>请确认已授予 Root 权限</div></div>';
-  }
-  installed.forEach(function(g){
-    var icon=gameIcon(g.name);
-    h+='<div class="card selectable" onclick="selectGame(\''+g.name+'\',\''+g.display+'\',\''+(g.path||'')+'\')">';
-    h+='<div class="card-row"><div class="card-icon" style="background:'+icon.bg+'">'+icon.emoji+'</div>';
-    h+='<div class="card-info"><div class="card-title">'+g.display+'</div><div class="card-meta">'+g.pkg+' · '+g.size+'</div></div>';
-    if(g.clone&&g.clone.installed){
-      h+='<span class="badge-on card-badge">本机+分身</span>';
-    }else{
-      h+='<span class="badge-on card-badge">本机</span>';
-    }
     h+='</div></div>';
   });
-
-  if(notInstalled.length){
-    h+='<div class="section-title" style="margin-top:16px">未安装的游戏</div>';
-    notInstalled.forEach(function(g){
-      var icon=gameIcon(g.name);
-      h+='<div class="card" style="opacity:0.45;cursor:default">';
-      h+='<div class="card-row"><div class="card-icon" style="background:#F0F0F0">❓</div>';
-      h+='<div class="card-info"><div class="card-title">'+g.display+'</div><div class="card-meta">'+g.pkg+'</div></div>';
-      h+='<span class="badge-off card-badge">未安装</span></div></div>';
-    });
-  }
   document.getElementById('games-list').innerHTML=h;
 }
 
@@ -396,28 +341,13 @@ function selectGame(name,display,presetPath){
   document.getElementById('paths-title').textContent=display;
   document.getElementById('paths-sub').textContent='选择数据路径';
 
-  api('detect').then(function(d){
-    var games=d.games||[];
-    var game=null;
-    for(var i=0;i<games.length;i++){
-      if(games[i].name===name){game=games[i];break}
-    }
-    if(!game){
-      game={name:name,display:display,installed:true,size:'-',path:presetPath||'',
-        clone:{installed:false,path:'',size:'-'}};
-    }
-    renderPathCards(game);
-    showPage('paths');
-  }).catch(function(){
-    var fallback={
-      name:name,display:display,installed:true,size:'-',
-      path:presetPath||'/data/data/com.tencent.tmgp.'+name,
-      clone:{installed:false,path:'',size:'-'}
-    };
-    renderPathCards(fallback);
-    showPage('paths');
-    toast('API 不可用, 使用离线模式','info');
-  });
+  var game={
+    name:name,display:display,installed:true,size:'-',
+    path:presetPath||'/data/data/com.tencent.tmgp.'+name,
+    clone:{installed:false,path:'',size:'-'}
+  };
+  renderPathCards(game);
+  showPage('paths');
 }
 
 function renderPathCards(game){

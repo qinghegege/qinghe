@@ -35,7 +35,7 @@ show_banner() {
     echo ""
     echo "  ===================================="
     echo "   腾讯手游账号本地切换器"
-    echo "   清荷 v1.0.2"
+    echo "   清荷 v1.1.0"
     echo "  ===================================="
     echo ""
 }
@@ -44,14 +44,13 @@ show_help() {
     show_banner
     echo "用法: sh qinghe.sh <命令> [参数...]"
     echo ""
-    echo "命令:"
-    echo "  backup   <游戏> <别名> [路径] [mode]    备份当前游戏数据"
-    echo "  list     [游戏] [路径]                  列出已备份账号"
-    echo "  delete   <别名>                         删除账号存档"
-    echo "  switch   <别名>                         一键切换账号"
-    echo "  detect                                  检测已安装腾讯手游 (JSON)"
-    echo "  web      [端口]                          启动 Web UI 管理界面"
-    echo "  help                                    显示此帮助"
+echo "命令:"
+echo "  backup   <游戏> <别名> [路径] [mode]    备份当前游戏数据"
+echo "  list     [游戏] [路径]                  列出已备份账号"
+echo "  delete   <别名>                         删除账号存档"
+echo "  switch   <别名>                         一键切换账号"
+echo "  web      [端口]                          启动 Web UI 管理界面"
+echo "  help                                    显示此帮助"
     echo ""
     echo "游戏简名:"
     echo "  sgame    王者荣耀"
@@ -60,12 +59,11 @@ show_help() {
     echo "  valorant 无畏契约"
     echo "  cf       CF手游"
     echo ""
-    echo "示例:"
-    echo "  sh qinghe.sh detect"
-    echo "  sh qinghe.sh backup sgame 大号"
-    echo "  sh qinghe.sh backup sgame 大号 /data/user/10/com.tencent.tmgp.sgame auto"
-    echo "  sh qinghe.sh switch 大号"
-    echo "  sh qinghe.sh list"
+echo "示例:"
+echo "  sh qinghe.sh backup sgame 大号"
+echo "  sh qinghe.sh backup sgame 大号 /data/user/10/com.tencent.tmgp.sgame auto"
+echo "  sh qinghe.sh switch 大号"
+echo "  sh qinghe.sh list"
     echo ""
     echo "无参数运行时进入交互式菜单"
     echo ""
@@ -75,16 +73,15 @@ show_menu() {
     show_banner
     echo "  请选择操作:"
     echo ""
-    echo "  1) 检测已安装的腾讯手游"
-    echo "  2) 列出已备份账号"
-    echo "  3) 备份当前游戏数据"
-    echo "  4) 切换账号"
-    echo "  5) 删除账号"
+    echo "  1) 列出已备份账号"
+    echo "  2) 备份当前游戏数据"
+    echo "  3) 切换账号"
+    echo "  4) 删除账号"
     echo "  W) 启动 Web UI (端口 8848)"
     echo "  0) 退出"
     echo ""
 
-    printf "  输入 [0-5/W]: "
+    printf "  输入 [0-4/W]: "
     read -r _choice
 
     case "$_choice" in
@@ -97,11 +94,6 @@ show_menu() {
             ;;
         1)
             echo ""
-            echo "检测结果 (JSON):"
-            detect_all_entries
-            ;;
-        2)
-            echo ""
             printf "游戏简名 (留空查全部): "
             read -r _g
             printf "数据路径 (留空不限制): "
@@ -110,7 +102,7 @@ show_menu() {
             _result="$(account_list "$_g" "$_p")"
             echo "$_result" | sed 's/},{/\n/g' | sed 's/[{[]//g;s/[]}]//g'
             ;;
-        3)
+        2)
             echo ""
             echo "可用游戏:"
             list_all_games | while IFS='|' read -r n d _ _; do
@@ -128,14 +120,14 @@ show_menu() {
             [ -z "$_md" ] && _md="custom"
             account_backup "$_gn" "$_al" "$_p" "$_md"
             ;;
-        4)
+        3)
             account_list "" "" 2>/dev/null
             echo ""
             printf "要切换到的账号别名: "
             read -r _al
             switch_account "$_al"
             ;;
-        5)
+        4)
             account_list "" "" 2>/dev/null
             echo ""
             printf "要删除的账号别名: "
@@ -164,9 +156,6 @@ main() {
     case "$_cmd" in
         help|-h|--help)
             show_help
-            ;;
-        detect)
-            detect_all_entries
             ;;
         backup)
             account_backup "$1" "$2" "$3" "$4"

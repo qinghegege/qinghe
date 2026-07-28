@@ -115,11 +115,6 @@ log_api() {
 log_api
 
 case "$_action" in
-    detect)
-        _result="$(detect_all_entries)"
-        respond "{\"games\":$_result}"
-        ;;
-
     accounts)
         _game="$(getp game "")"
         _path="$(getp path "")"
@@ -189,7 +184,7 @@ case "$_action" in
 
     status)
         _se="$(getenforce 2>/dev/null || echo 'unknown')"
-        respond "{\"ok\":true,\"version\":\"1.0.2\",\"dataDir\":\"$DATA_DIR\",\"selinux\":\"$_se\"}"
+        respond "{\"ok\":true,\"version\":\"1.1.0\",\"dataDir\":\"$DATA_DIR\",\"selinux\":\"$_se\"}"
         ;;
 
     timeout)

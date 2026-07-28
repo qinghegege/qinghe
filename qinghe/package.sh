@@ -8,7 +8,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 RELEASE_DIR="$SCRIPT_DIR/release"
-VERSION="v1.0.2"
+VERSION="v1.1.0"
 
 mkdir -p "$RELEASE_DIR"
 
