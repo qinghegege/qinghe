@@ -335,17 +335,17 @@ function startDetect(){
 
 function renderPresetGames(){
   var preset=[
-    {name:'sgame',display:'王者荣耀',pkg:'com.tencent.tmgp.sgame'},
-    {name:'pubgm',display:'和平精英',pkg:'com.tencent.tmgp.pubgmhd'},
-    {name:'dfm',display:'三角洲行动',pkg:'com.tencent.tmgp.dfm'},
-    {name:'valorant',display:'无畏契约',pkg:'com.tencent.tmgp.valorant'},
-    {name:'cf',display:'CF手游',pkg:'com.tencent.tmgp.cf'}
+    {name:'sgame',display:'王者荣耀',pkg:'com.tencent.tmgp.sgame',path:'/data/data/com.tencent.tmgp.sgame'},
+    {name:'pubgm',display:'和平精英',pkg:'com.tencent.tmgp.pubgmhd',path:'/data/data/com.tencent.tmgp.pubgmhd'},
+    {name:'dfm',display:'三角洲行动',pkg:'com.tencent.tmgp.dfm',path:'/data/data/com.tencent.tmgp.dfm'},
+    {name:'valorant',display:'无畏契约',pkg:'com.tencent.tmgp.valorant',path:'/data/data/com.tencent.tmgp.valorant'},
+    {name:'cf',display:'CF手游',pkg:'com.tencent.tmgp.cf',path:'/data/data/com.tencent.tmgp.cf'}
   ];
   var tip='<div style="font-size:11px;color:var(--coral);text-align:center;margin-bottom:10px">自动检测超时, 请从下方选择游戏</div>';
   var h=tip;
   preset.forEach(function(g){
     var icon=gameIcon(g.name);
-    h+='<div class="card selectable" onclick="selectGame(\''+g.name+'\',\''+g.display+'\')">';
+    h+='<div class="card selectable" onclick="selectGame(\''+g.name+'\',\''+g.display+'\',\''+g.path+'\')">';
     h+='<div class="card-row"><div class="card-icon" style="background:'+icon.bg+'">'+icon.emoji+'</div>';
     h+='<div class="card-info"><div class="card-title">'+g.display+'</div><div class="card-meta">'+g.pkg+'</div></div>';
     h+='<span class="badge-off card-badge">预置</span></div></div>';
@@ -363,7 +363,7 @@ function renderGames(games){
   }
   installed.forEach(function(g){
     var icon=gameIcon(g.name);
-    h+='<div class="card selectable" onclick="selectGame(\''+g.name+'\',\''+g.display+'\')">';
+    h+='<div class="card selectable" onclick="selectGame(\''+g.name+'\',\''+g.display+'\',\''+(g.path||'')+'\')">';
     h+='<div class="card-row"><div class="card-icon" style="background:'+icon.bg+'">'+icon.emoji+'</div>';
     h+='<div class="card-info"><div class="card-title">'+g.display+'</div><div class="card-meta">'+g.pkg+' · '+g.size+'</div></div>';
     if(g.clone&&g.clone.installed){
@@ -389,7 +389,7 @@ function renderGames(games){
 
 // === 页面2: 游戏详情/路径选择 ===
 
-function selectGame(name,display){
+function selectGame(name,display,presetPath){
   STATE.currentGame=name;
   STATE.currentGameDisplay=display;
 
@@ -403,13 +403,20 @@ function selectGame(name,display){
       if(games[i].name===name){game=games[i];break}
     }
     if(!game){
-      game={name:name,display:display,installed:true,size:'-',path:'',
+      game={name:name,display:display,installed:true,size:'-',path:presetPath||'',
         clone:{installed:false,path:'',size:'-'}};
     }
     renderPathCards(game);
     showPage('paths');
   }).catch(function(){
-    toast('连接失败','err');
+    var fallback={
+      name:name,display:display,installed:true,size:'-',
+      path:presetPath||'/data/data/com.tencent.tmgp.'+name,
+      clone:{installed:false,path:'',size:'-'}
+    };
+    renderPathCards(fallback);
+    showPage('paths');
+    toast('API 不可用, 使用离线模式','info');
   });
 }
 
