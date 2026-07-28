@@ -28,6 +28,7 @@ chmod 755 "$MODPATH/system/bin/qh" 2>/dev/null
 
 ui_print ""
 ui_print "安装完成!"
+ui_print "  KSU: 点击模块操作按钮一键启动"
 ui_print "  qh save <包名>   存号"
 ui_print "  qh login <包名>  上号"
 ui_print "  qh web [端口]    启动 Web UI"
