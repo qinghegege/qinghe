@@ -39,3 +39,15 @@ Agent 在任务执行过程中发现的条目应遵循以下格式：
   - 修改 `qinghe/package.sh` 中的 `VERSION`
   - 运行 `sh qinghe/package.sh` 重新构建模块 zip
   - `git add -A && git commit` + `git push origin master`
+
+### Shell 兼容性约束 - 零外部命令依赖
+- Date: 2026-07-28
+- Context: Agent 排查 Android 设备上 CGI 脚本挂死问题时发现
+- Category: 环境配置
+- Instructions:
+  - 严禁使用 `local` 关键字 (Android mksh 不支持)
+  - 严禁使用 `find`/`dirname`/`basename` 外部命令 (busybox 精简版可能不带)
+  - `dirname`: 改用 `${var%/*}` 或 `${0%/*}`
+  - `basename`: 改用 `${var##*/}`
+  - `find`: 改用 `ls` + `[ -d ]` shell 内置
+  - 目录遍历: 用 `ls /path/` 替代 glob `for x in /path/*` (防挂载点卡死)
