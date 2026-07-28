@@ -5,7 +5,7 @@
 # 恢复 force-stop -> cp -> chown -> restorecon
 #===============================================================================
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR="$(cd "${0%/*}" && pwd)"
 . "$SCRIPT_DIR/lib/common.sh"
 . "$SCRIPT_DIR/lib/account.sh"
 

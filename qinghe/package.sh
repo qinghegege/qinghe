@@ -5,9 +5,9 @@
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR="$(cd "${0%/*}" && pwd)"
 RELEASE_DIR="$SCRIPT_DIR/release"
-VERSION="v2.2.6"
+VERSION="v2.2.7"
 
 mkdir -p "$RELEASE_DIR"
 
@@ -33,6 +33,7 @@ cp "$SCRIPT_DIR/module/module.prop" "$MODULE_TMP/"
 cp "$SCRIPT_DIR/module/customize.sh" "$MODULE_TMP/"
 cp "$SCRIPT_DIR/module/action.sh" "$MODULE_TMP/"
 cp -r "$SCRIPT_DIR/module/webroot" "$MODULE_TMP/"
+cp "$SCRIPT_DIR/diag.sh" "$MODULE_TMP/"
 
 chmod -R 755 "$MODULE_TMP"
 

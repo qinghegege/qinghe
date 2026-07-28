@@ -3,7 +3,7 @@
 # 清荷 - CGI API (busybox httpd)
 #===============================================================================
 
-WEB_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+WEB_DIR="$(cd "${0%/*}/.." && pwd)"
 MODULE_DIR="$(cd "$WEB_DIR/.." && pwd)"
 SCRIPT_DIR="$MODULE_DIR"
 . "$MODULE_DIR/lib/common.sh"
@@ -185,12 +185,12 @@ EOF
         if [ -d "$SAVE_DIR" ]; then
             for uid_dir in "$SAVE_DIR"/*; do
                 [ -d "$uid_dir" ] || continue
-                _uid=$(basename "$uid_dir")
+                _uid=${uid_dir##*/}
                 [ "$_uid" = "restore_scripts" ] && continue
                 [ "$_uid" -eq "$_uid" ] 2>/dev/null || continue
                 for bak_dir in "$uid_dir"/*; do
                     [ -d "$bak_dir" ] || continue
-                    _bname=$(basename "$bak_dir")
+                    _bname=${bak_dir##*/}
                     _pkg="${_bname%%_*}"
                     items="$items{\"uid\":\"$_uid\",\"name\":\"$_bname\",\"pkg\":\"$_pkg\"},"
                 done

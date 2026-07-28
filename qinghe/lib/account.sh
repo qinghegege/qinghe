@@ -3,7 +3,7 @@
 # 清荷 - 存号/上号核心逻辑 (CLI 交互模式)
 #===============================================================================
 
-. "${SCRIPT_DIR:-$(cd "$(dirname "$0")" && pwd)}/lib/common.sh"
+. "${SCRIPT_DIR:-$(cd "${0%/*}" && pwd)}/lib/common.sh"
 
 get_all_uid() {
     _uid_list=""
@@ -11,9 +11,9 @@ get_all_uid() {
     # Always include uid 0 if /data/data exists (canonical)
     [ -d "/data/data" ] && _uid_list="$_uid_list 0"
 
-    # find-based multi-user scan (won't hang on stuck mounts)
-    for dir in $(find /data/user -maxdepth 1 -type d 2>/dev/null); do
-        _uid=$(basename "$dir")
+    # ls-based multi-user scan (独立进程，无 find 依赖)
+    for dir in $(ls /data/user/ 2>/dev/null); do
+        _uid=$dir
         [ "$_uid" -eq "$_uid" ] 2>/dev/null || continue
         [ "$_uid" = "0" ] && continue
         _uid_list="$_uid_list $_uid"
@@ -21,29 +21,6 @@ get_all_uid() {
     echo "${_uid_list# }"
 }
 
-count_backup_files() {
-    _src="$1"
-    _cnt=0
-    for dir in $ACCOUNT_DIRS; do
-        [ -d "$_src/$dir" ] || continue
-        _cnt=$((_cnt + $(find "$_src/$dir" -type f 2>/dev/null | wc -l)))
-    done
-    echo $_cnt
-}
-
-show_progress() {
-    _cur="$1"
-    _tot="$2"
-    [ $_tot -eq 0 ] && _tot=1
-    _pct=$((_cur * 100 / _tot))
-    _bar=""
-    _i=0
-    while [ $_i -lt 10 ]; do
-        [ $((_i * 10)) -lt $_pct ] && _bar="${_bar}#" || _bar="${_bar}-"
-        _i=$((_i + 1))
-    done
-    printf "\r  [%s] %d%%" "$_bar" "$_pct"
-}
 
 #===============================================================================
 # 存号 - 备份五目录到 SD 卡 (交互式, CLI 专用)
@@ -141,27 +118,14 @@ do_backup() {
     am force-stop "$pkg" 2>/dev/null
     sleep 1
 
-    total=$(count_backup_files "$src")
-    [ $total -eq 0 ] && total=1
-    current=0
-    failed=""
-
+    found=0
     for dir in $ACCOUNT_DIRS; do
-        [ -d "$src/$dir" ] || { warn "目录 $src/$dir 不存在，跳过"; continue; }
-        for f in $(find "$src/$dir" -type f 2>/dev/null); do
-            rel="${f#$src/}"
-            mkdir -p "$(dirname "$dest/$rel")" 2>/dev/null
-            if cp -a "$f" "$dest/$rel" 2>/dev/null; then
-                current=$((current + 1))
-            else
-                failed="${failed}\n${RED}复制失败: $f${RESET}"
-            fi
-            [ "$QH_NO_CONFIRM" != "1" ] && show_progress "$current" "$total"
-        done
+        [ -d "$src/$dir" ] || continue
+        cp -a "$src/$dir" "$dest/" 2>/dev/null
+        found=1
     done
-    [ "$QH_NO_CONFIRM" != "1" ] && echo ""
 
-    [ -n "$failed" ] && echo -e "$failed"
+    [ $found -eq 0 ] && { warn "无账号数据可备份"; return 1; }
 
     generate_restore_script "$uid" "$pkg" "$backup_name" "$remark"
     info "备份完成: $dest"
@@ -221,12 +185,12 @@ restore_account() {
 
     for uid_dir in "$SAVE_DIR"/*; do
         [ -d "$uid_dir" ] || continue
-        _uid=$(basename "$uid_dir")
+        _uid=${uid_dir##*/}
         [ "$_uid" = "restore_scripts" ] && continue
         [ "$_uid" -eq "$_uid" ] 2>/dev/null || continue
         for bak_dir in "$uid_dir"/*; do
             [ -d "$bak_dir" ] || continue
-            _bname=$(basename "$bak_dir")
+            _bname=${bak_dir##*/}
             if echo "$_bname" | grep -q "^${pkg}_"; then
                 _remark="${_bname#${pkg}_}"
                 _clist="$_clist|$bak_dir"
@@ -320,7 +284,7 @@ list_accounts() {
     _total=0
     for uid_dir in "$SAVE_DIR"/*; do
         [ -d "$uid_dir" ] || continue
-        _uid=$(basename "$uid_dir")
+        _uid=${uid_dir##*/}
         [ "$_uid" = "restore_scripts" ] && continue
         [ "$_uid" -eq "$_uid" ] 2>/dev/null || continue
         for bak_dir in "$uid_dir"/*; do
@@ -333,12 +297,12 @@ list_accounts() {
 
     for uid_dir in "$SAVE_DIR"/*; do
         [ -d "$uid_dir" ] || continue
-        _uid=$(basename "$uid_dir")
+        _uid=${uid_dir##*/}
         [ "$_uid" = "restore_scripts" ] && continue
         [ "$_uid" -eq "$_uid" ] 2>/dev/null || continue
         for bak_dir in "$uid_dir"/*; do
             [ -d "$bak_dir" ] || continue
-            _bname=$(basename "$bak_dir")
+            _bname=${bak_dir##*/}
             echo "  [user/$_uid] $_bname"
         done
     done
