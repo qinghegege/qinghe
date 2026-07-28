@@ -5,7 +5,7 @@ import json
 import urllib.parse
 import os
 
-WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "qinghe", "web")
+WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
 
 SAVE_DIR = "/storage/emulated/0/账号存放位置"
 VERSION = "v2.2.3"
