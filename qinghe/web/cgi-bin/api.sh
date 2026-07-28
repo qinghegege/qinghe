@@ -15,17 +15,17 @@ json_ok() { echo "{\"ok\":true${1:+,$1}}"; }
 json_err() { echo "{\"ok\":false,\"error\":\"$1\"}"; }
 
 get_param() {
-    local key="$1"
-    for pair in $(echo "$QUERY_STRING" | tr '&' ' '); do
-        local k="${pair%%=*}"
-        [ "$k" = "$key" ] && { echo "${pair#*=}"; return 0; }
+    _key="$1"
+    for _pair in $(echo "$QUERY_STRING" | tr '&' ' '); do
+        _k="${_pair%%=*}"
+        [ "$_k" = "$_key" ] && { echo "${_pair#*=}"; return 0; }
     done
 }
 
 url_decode() {
-    local s="$1"
-    s=$(echo "$s" | sed 's/+/ /g; s/%\([0-9A-F][0-9A-F]\)/\\x\1/gI')
-    printf '%b' "$s" 2>/dev/null || echo "$s"
+    _s="$1"
+    _s=$(echo "$_s" | sed 's/+/ /g; s/%\([0-9A-F][0-9A-F]\)/\\x\1/gI')
+    printf '%b' "$_s" 2>/dev/null || echo "$_s"
 }
 
 action=$(get_param "action")
@@ -41,34 +41,17 @@ case "$action" in
 
         uids=""
 
-        # 策略1: 直读 /data/data (uid=0 权威路径，绕开 /data/user/ 干扰)
-        if [ -d "/data/data/$pkg" ]; then
-            uids="$uids\"0\","
-        fi
+        # 逐个探测已知路径 (纯 shell builtin，完全不用 find/dirname/basename)
+        [ -d "/data/data/$pkg" ] && uids="$uids\"0\","
+        [ -d "/data/user_de/0/$pkg" ] && { echo "|$uids|" | grep -q '"0"' || uids="$uids\"0\","; }
 
-        # 策略2: find 遍历多用户分区 (走 syscall，不被挂载点伪文件系统卡死)
-        for hit in $(find /data/user -maxdepth 2 -type d -name "$pkg" 2>/dev/null); do
-            _pd=$(dirname "$hit")
-            _u=$(basename "$_pd")
+        # ls 列出多用户分区再逐个 stat (独立进程，不卡挂载点)
+        for _u in $(ls /data/user/ 2>/dev/null); do
             [ "$_u" -eq "$_u" ] 2>/dev/null || continue
             [ "$_u" = "0" ] && continue
-            echo "|$uids|" | grep -q "|\"$_u\"|" && continue
+            [ -d "/data/user/$_u/$pkg" ] || continue
             uids="$uids\"$_u\","
         done
-
-        # 策略3: 深度扫全 /data (绕过一切隐藏模块重定向)
-        if [ -z "$uids" ]; then
-            for hit in $(find /data -maxdepth 5 -type f -name "*.xml" -path "*/shared_prefs/*" 2>/dev/null | head -50); do
-                _data_dir=$(dirname "$(dirname "$hit")")
-                if [ "$(basename "$_data_dir")" != "$pkg" ]; then continue; fi
-                _uid_dir=$(dirname "$_data_dir")
-                _u=$(basename "$_uid_dir")
-                if [ "$_u" = "data" ]; then _u="0"; fi
-                [ "$_u" -eq "$_u" ] 2>/dev/null || continue
-                echo "|$uids|" | grep -q "|\"$_u\"|" && continue
-                uids="$uids\"$_u\","
-            done
-        fi
 
         json_ok "\"uids\":[${uids%,}]"
         ;;
