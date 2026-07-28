@@ -6,82 +6,163 @@
 <title>清荷 - 账号切换</title>
 <style>
 :root {
-  --pink: #f8a0b8;
+  --pink: #f4a0b0;
   --pink-light: #fef0f4;
-  --pink-dark: #e4788e;
+  --pink-deep: #e87a90;
+  --ribbon: #e6003a;
+  --ribbon-dark: #c4002e;
   --white: #fff;
   --text: #5d4e5d;
-  --text-light: #8a7a8a;
-  --green: #65c294;
-  --shadow: 0 2px 12px rgba(248,160,184,.18);
-  --radius: 16px;
+  --text-light: #9a8a9a;
+  --green: #6bc490;
+  --shadow: 0 2px 14px rgba(244,160,176,.2);
+  --radius: 18px;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-  background:linear-gradient(160deg, #fff0f3 0%, #fef0f4 40%, #fde8ee 100%);
+  background:linear-gradient(170deg, #fff5f7 0%, #fef0f4 35%, #fce4ec 100%);
+  background-attachment:fixed;
   color:var(--text);
   min-height:100vh;
-  padding-bottom:40px;
+  padding-bottom:60px;
   -webkit-tap-highlight-color:transparent;
+  position:relative;
+}
+/* ---- bg paw prints ---- */
+body::before {
+  content:'';
+  position:fixed; inset:0; pointer-events:none; z-index:0;
+  opacity:.03;
+  background:
+    radial-gradient(circle at 10% 20%, #e6003a 1px,transparent 1px),
+    radial-gradient(circle at 12% 25%, #e6003a 1.5px,transparent 1.5px),
+    radial-gradient(circle at 13% 21%, #e6003a 1px,transparent 1px),
+    radial-gradient(circle at 10% 26%, #e6003a 2px,transparent 2px),
+    radial-gradient(circle at 85% 15%, #e6003a 1px,transparent 1px),
+    radial-gradient(circle at 87% 20%, #e6003a 1.5px,transparent 1.5px),
+    radial-gradient(circle at 88% 16%, #e6003a 1px,transparent 1px),
+    radial-gradient(circle at 85% 21%, #e6003a 2px,transparent 2px),
+    radial-gradient(circle at 25% 75%, #e6003a 1px,transparent 1px),
+    radial-gradient(circle at 27% 80%, #e6003a 1.5px,transparent 1.5px),
+    radial-gradient(circle at 28% 76%, #e6003a 1px,transparent 1px),
+    radial-gradient(circle at 25% 81%, #e6003a 2px,transparent 2px),
+    radial-gradient(circle at 70% 55%, #e6003a 1px,transparent 1px),
+    radial-gradient(circle at 72% 60%, #e6003a 1.5px,transparent 1.5px),
+    radial-gradient(circle at 73% 56%, #e6003a 1px,transparent 1px),
+    radial-gradient(circle at 70% 61%, #e6003a 2px,transparent 2px);
+  background-size:100% 100%;
 }
 
 /* ---- header ---- */
 .header {
-  background:linear-gradient(135deg, #f9a8bc 0%, #f898b0 50%, #f0889c 100%);
-  padding:20px 24px 18px;
+  background:linear-gradient(135deg, #fbb6c5 0%, #f4a0b0 50%, #f090a0 100%);
+  padding:28px 24px 24px;
   text-align:center;
   position:relative;
-  overflow:hidden;
+  overflow:visible;
+  z-index:1;
 }
+/* header ribbon border bottom */
 .header::after {
   content:'';
-  position:absolute;
-  bottom:-16px; left:50%;
+  position:absolute; bottom:-12px; left:50%;
+  transform:translateX(-50%);
+  width:80%; height:24px;
+  background:var(--ribbon);
+  border-radius:0 0 20px 20px;
+  z-index:-1;
+}
+.header::before {
+  content:'';
+  position:absolute; bottom:-12px; left:50%;
   transform:translateX(-50%);
   width:0; height:0;
-  border-left:16px solid transparent;
-  border-right:16px solid transparent;
-  border-top:18px solid #f0889c;
-}
-.title {
-  font-size:22px; font-weight:700; color:var(--white);
-  letter-spacing:1px;
-}
-.subtitle {
-  font-size:12px; color:rgba(255,255,255,.75);
-  margin-top:2px;
+  border-left:12px solid transparent;
+  border-right:12px solid transparent;
+  border-top:12px solid var(--ribbon-dark);
+  z-index:0;
 }
 
-/* ---- badge ---- */
-.badge {
+/* ---- HK bow ---- */
+.bow-wrap {
+  display:inline-block; position:relative;
+  margin-bottom:8px;
+}
+.bow {
   display:inline-block;
-  background:rgba(255,255,255,.25);
-  color:var(--white);
-  font-size:11px;
-  padding:2px 10px;
-  border-radius:10px;
-  margin-top:6px;
+  position:relative;
+  width:36px; height:26px;
+}
+.bow-center {
+  position:absolute;
+  width:14px; height:14px;
+  background:var(--ribbon);
+  border-radius:50%;
+  left:50%; top:50%;
+  transform:translate(-50%,-50%);
+  z-index:2;
+}
+.bow-left, .bow-right {
+  position:absolute; top:2px;
+  width:0; height:0;
+  border-top:13px solid var(--ribbon);
+  border-bottom:13px solid var(--ribbon);
+}
+.bow-left {
+  left:0;
+  border-left:15px solid transparent;
+  border-right:10px solid var(--ribbon);
+  border-radius:0 40% 40% 0;
+}
+.bow-right {
+  right:0;
+  border-right:15px solid transparent;
+  border-left:10px solid var(--ribbon);
+  border-radius:40% 0 0 40%;
+}
+
+.title {
+  font-size:22px; font-weight:700; color:var(--white);
+  letter-spacing:3px;
+}
+.subtitle {
+  font-size:12px; color:rgba(255,255,255,.7);
+  margin-top:4px;
+  letter-spacing:1px;
 }
 
 /* ---- container ---- */
 .container {
   max-width:420px; margin:0 auto;
-  padding:20px 16px;
+  padding:24px 14px;
+  position:relative; z-index:1;
+}
+
+/* ---- section title with ribbon ---- */
+.section-title {
+  font-size:13px; font-weight:700; color:var(--ribbon);
+  margin-bottom:12px; padding-left:18px;
+  position:relative;
+  text-transform:uppercase; letter-spacing:2px;
+}
+.section-title::before {
+  content:'';
+  position:absolute; left:0; top:50%;
+  transform:translateY(-50%);
+  width:12px; height:12px;
+  background:var(--ribbon);
+  border-radius:3px 3px 10px 3px;
+}
+.section-title::after {
+  content:'';
+  position:absolute; left:0; bottom:-4px;
+  width:40px; height:2px;
+  background:linear-gradient(90deg, var(--ribbon), transparent);
+  border-radius:1px;
 }
 
 /* ---- game cards ---- */
-.section-title {
-  font-size:14px; font-weight:600; color:var(--text-light);
-  margin-bottom:10px; padding-left:4px;
-  display:flex; align-items:center; gap:6px;
-}
-.section-title::before {
-  content:''; display:inline-block;
-  width:4px; height:16px;
-  background:var(--pink); border-radius:2px;
-}
-
 .game-grid {
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -91,114 +172,119 @@ body {
 .game-card {
   background:var(--white);
   border-radius:var(--radius);
-  padding:14px 12px;
+  padding:16px 10px;
   text-align:center;
   box-shadow:var(--shadow);
   cursor:pointer;
-  transition:transform .15s,box-shadow .15s;
+  transition:all .18s;
   border:2px solid transparent;
   position:relative;
-  overflow:hidden;
 }
-.game-card:active { transform:scale(.96); }
+.game-card:active { transform:scale(.95); box-shadow:0 1px 6px rgba(244,160,176,.15); }
 .game-card.selected {
-  border-color:var(--pink);
-  box-shadow:0 0 0 3px rgba(248,160,184,.25),var(--shadow);
+  border-color:var(--ribbon);
+  box-shadow:0 0 0 3px rgba(230,0,58,.12), var(--shadow);
+  background:linear-gradient(135deg, #fff, #fff5f7);
 }
+/* selected checkmark */
 .game-card.selected::after {
   content:'';
   position:absolute; top:8px; right:8px;
-  width:18px; height:18px;
-  background:var(--pink);
+  width:20px; height:20px;
+  background:var(--ribbon);
   border-radius:50%;
 }
 .game-card.selected::before {
   content:'';
-  position:absolute; top:11px; right:13px;
-  width:6px; height:10px;
+  position:absolute; top:12px; right:13px;
+  width:5px; height:9px;
   border:solid var(--white);
   border-width:0 2px 2px 0;
   transform:rotate(45deg);
   z-index:1;
 }
 .game-icon {
-  font-size:32px; margin-bottom:6px;
+  font-size:34px; margin-bottom:6px;
   display:block;
 }
 .game-name {
-  font-size:13px; font-weight:600;
+  font-size:13px; font-weight:700;
+  color:var(--text);
 }
 .game-pkg {
   font-size:10px; color:var(--text-light);
   margin-top:3px;
-  word-break:break-all;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 
-/* ---- manual input ---- */
+/* ---- input ---- */
 .manual-row {
   display:flex; gap:8px;
   margin-bottom:20px;
 }
 .input {
   flex:1;
-  border:2px solid #f5dee6;
-  border-radius:12px;
-  padding:10px 14px;
+  border:2px solid #f5e0e8;
+  border-radius:14px;
+  padding:11px 14px;
   font-size:14px; color:var(--text);
   background:var(--white);
   outline:none;
   transition:border-color .2s;
 }
-.input:focus { border-color:var(--pink); }
-.input::placeholder { color:#ccc; }
+.input:focus { border-color:var(--pink-deep); }
+.input::placeholder { color:#dcc; }
 
 .btn {
   border:none;
-  border-radius:12px;
-  padding:10px 18px;
+  border-radius:14px;
+  padding:10px 20px;
   font-size:14px; font-weight:600;
   cursor:pointer;
-  transition:opacity .15s,transform .15s;
+  transition:all .15s;
   white-space:nowrap;
+  letter-spacing:.5px;
 }
-.btn:active { opacity:.8; transform:scale(.96); }
+.btn:active { opacity:.85; transform:scale(.96); }
 .btn-primary {
-  background:linear-gradient(135deg, var(--pink), var(--pink-dark));
+  background:linear-gradient(135deg, var(--ribbon), var(--ribbon-dark));
   color:var(--white);
+  box-shadow:0 3px 10px rgba(230,0,58,.2);
 }
 .btn-outline {
   background:var(--white);
-  color:var(--pink-dark);
-  border:2px solid var(--pink);
+  color:var(--ribbon);
+  border:2px solid var(--ribbon);
 }
 .btn-green {
-  background:linear-gradient(135deg, var(--green), #4ea87a);
+  background:linear-gradient(135deg, var(--green), #52a870);
   color:var(--white);
+  box-shadow:0 3px 10px rgba(107,196,144,.2);
 }
 .btn-block { display:block; width:100%; text-align:center; }
 
-/* ---- user selector ---- */
+/* ---- user tags ---- */
 .user-tags {
   display:flex; gap:8px; flex-wrap:wrap;
   margin-bottom:16px;
 }
 .user-tag {
-  padding:6px 14px;
-  border-radius:20px;
-  font-size:13px;
+  padding:7px 16px;
+  border-radius:22px;
+  font-size:13px; font-weight:500;
   background:var(--white);
-  border:2px solid #f5dee6;
+  border:2px solid #f5e0e8;
   cursor:pointer;
   transition:all .15s;
+  letter-spacing:.5px;
 }
 .user-tag.selected {
   background:var(--pink-light);
-  border-color:var(--pink);
-  color:var(--pink-dark);
-  font-weight:600;
+  border-color:var(--ribbon);
+  color:var(--ribbon);
+  font-weight:700;
 }
 
-/* ---- remark input ---- */
 .remark-row {
   display:flex; gap:8px;
   margin-bottom:16px;
@@ -211,19 +297,21 @@ body {
 }
 .backup-item {
   background:var(--white);
-  border-radius:12px;
-  padding:12px 14px;
+  border-radius:14px;
+  padding:14px 14px;
   box-shadow:var(--shadow);
   display:flex;
   justify-content:space-between;
   align-items:center;
-  border-left:4px solid var(--pink);
+  border-left:5px solid var(--ribbon);
+  transition:transform .15s;
 }
+.backup-item:active { transform:scale(.98); }
 .backup-info {
   flex:1; min-width:0;
 }
 .backup-info .name {
-  font-size:14px; font-weight:600;
+  font-size:13px; font-weight:700;
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 .backup-info .meta {
@@ -233,7 +321,7 @@ body {
 .backup-item .restore-btn {
   flex-shrink:0;
   margin-left:12px;
-  padding:6px 14px;
+  padding:7px 16px;
   font-size:12px;
 }
 
@@ -241,10 +329,10 @@ body {
 .toast {
   position:fixed; top:20px; left:50%;
   transform:translateX(-50%);
-  background:var(--text);
+  background:#5d4e5d;
   color:var(--white);
-  padding:10px 24px;
-  border-radius:20px;
+  padding:12px 28px;
+  border-radius:24px;
   font-size:13px;
   z-index:999;
   opacity:0;
@@ -252,26 +340,24 @@ body {
   pointer-events:none;
   max-width:90vw;
   text-align:center;
+  font-weight:600; letter-spacing:.5px;
 }
 .toast.show { opacity:1; }
 .toast.success { background:var(--green); }
 .toast.error { background:#e06060; }
 
-/* ---- empty ---- */
 .empty {
-  text-align:center; padding:32px 0;
+  text-align:center; padding:36px 0;
   color:var(--text-light);
   font-size:14px;
 }
-.empty-icon { font-size:40px; margin-bottom:8px; display:block; }
+.empty-icon { font-size:44px; margin-bottom:8px; display:block; }
 
-/* ---- footer ---- */
-.footer {
-  text-align:center;
-  padding:16px;
-  color:var(--text-light);
-  font-size:11px;
-  opacity:.6;
+/* ---- divider ---- */
+.divider {
+  height:1px;
+  background:linear-gradient(90deg, transparent, #f5d8e0 20%, #f5d8e0 80%, transparent);
+  margin:24px 0;
 }
 
 /* ---- spinner ---- */
@@ -287,29 +373,38 @@ body {
 }
 @keyframes spin { to { transform:rotate(360deg); } }
 
-/* ---- divider ---- */
-.divider {
-  height:1px;
-  background:linear-gradient(90deg, transparent, #f5dee6, transparent);
-  margin:20px 0;
+/* ---- footer decoration ---- */
+.footer-deco {
+  text-align:center;
+  padding:32px 0 16px;
+  position:relative;
+}
+.footer-deco::before {
+  content:'';
+  display:block;
+  margin:0 auto 8px;
+  width:60px; height:40px;
+  background:
+    radial-gradient(circle at 18px 8px, var(--ribbon) 6px, transparent 6px),
+    radial-gradient(circle at 42px 8px, var(--ribbon) 6px, transparent 6px),
+    radial-gradient(circle at 30px 22px, #fff 8px, transparent 8px);
+  opacity:.4;
 }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div class="title">清荷 / Qinghe</div>
+  <div class="bow-wrap"><span class="bow"><i class="bow-left"></i><i class="bow-right"></i><i class="bow-center"></i></span></div>
+  <div class="title">清 荷</div>
   <div class="subtitle">腾讯手游账号本地切换器</div>
-  <div class="badge" id="versionBadge">v-</div>
 </div>
 
 <div class="container">
 
-  <!-- 游戏选择 -->
   <div class="section-title">选择游戏</div>
   <div class="game-grid" id="gameGrid"></div>
 
-  <!-- 手动输入 -->
   <div class="manual-row">
     <input class="input" id="manualPkg" placeholder="或手动输入包名..." autocomplete="off">
     <button class="btn btn-outline" id="btnManualSelect">确定</button>
@@ -317,36 +412,31 @@ body {
 
   <div class="divider"></div>
 
-  <!-- 操作区 -->
   <div class="section-title">操作</div>
-
   <div class="user-tags" id="userTags"></div>
-
-  <!-- 备注 -->
   <div class="remark-row">
     <input class="input" id="remarkInput" placeholder="备注名（如 大号）" autocomplete="off">
   </div>
 
   <div style="display:flex; gap:10px; margin-bottom:20px;">
-    <button class="btn btn-primary btn-block" id="btnBackup">存号</button>
-    <button class="btn btn-outline btn-block" id="btnRefresh">刷新</button>
+    <button class="btn btn-primary btn-block" id="btnBackup">存 号</button>
+    <button class="btn btn-outline btn-block" id="btnRefresh">刷 新</button>
   </div>
 
   <div class="divider"></div>
 
-  <!-- 已保存 -->
   <div class="section-title">已保存账号</div>
   <div class="backup-list" id="backupList">
-    <div class="empty"><span class="empty-icon">loading...</span></div>
+    <div class="empty"><span class="empty-icon">. . .</span>加载中</div>
   </div>
+
+  <div class="footer-deco"></div>
 
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="footer">清荷 v2.2.3 &middot; Powered by busybox httpd</div>
 
 <script>
-var VERSION = '-';
 var selectedPkg = '';
 var selectedUid = '';
 var uids = [];
@@ -354,16 +444,16 @@ var uids = [];
 var _isKsu = (typeof ksu !== 'undefined' && ksu && typeof ksu.exec === 'function');
 
 var games = [
-  { name:'和平精英', pkg:'com.tencent.tmgp.pubgmhd', icon:'' },
-  { name:'王者荣耀', pkg:'com.tencent.tmgp.sgame', icon:'' },
-  { name:'无畏契约', pkg:'com.tencent.tmgp.codev', icon:'' },
-  { name:'三角洲行动', pkg:'com.tencent.tmgp.dfm', icon:'' },
-  { name:'CF 手游', pkg:'com.tencent.tmgp.cf', icon:'' },
+  { name:'和平精英', pkg:'com.tencent.tmgp.pubgmhd' },
+  { name:'王者荣耀', pkg:'com.tencent.tmgp.sgame' },
+  { name:'无畏契约', pkg:'com.tencent.tmgp.codev' },
+  { name:'三角洲行动', pkg:'com.tencent.tmgp.dfm' },
+  { name:'CF 手游', pkg:'com.tencent.tmgp.cf' },
 ];
 
 var iconMap = {
   'com.tencent.tmgp.pubgmhd':'&#x1F52B;',
-  'com.tencent.tmgp.sgame':'&#x2694;&#xFE0F;',
+  'com.tencent.tmgp.sgame':'&#x2694;',
   'com.tencent.tmgp.codev':'&#x1F4A3;',
   'com.tencent.tmgp.dfm':'&#x1F3AF;',
   'com.tencent.tmgp.cf':'&#x1F52B;',
@@ -374,7 +464,7 @@ function toast(msg, type) {
   el.textContent = msg;
   el.className = 'toast ' + (type||'') + ' show';
   clearTimeout(el._timer);
-  el._timer = setTimeout(function(){ el.className='toast'; }, 2000);
+  el._timer = setTimeout(function(){ el.className='toast'; }, 2200);
 }
 
 function api(action, params) {
@@ -410,7 +500,14 @@ function api(action, params) {
     .catch(function(e){ return {ok:false,error:'offline'}; });
 }
 
-function selectGame(pkg, name) {
+function selectGame(pkg) {
+  selectedPkg = pkg;
+  document.querySelectorAll('.game-card').forEach(function(c){ c.classList.remove('selected'); });
+  var el = document.getElementById('card_' + pkg.replace(/\./g,'_'));
+  if (el) el.classList.add('selected');
+  document.getElementById('manualPkg').value = pkg;
+  loadUids(pkg);
+}
 
 document.getElementById('btnManualSelect').addEventListener('click', function(){
   var pkg = document.getElementById('manualPkg').value.trim();
@@ -431,18 +528,18 @@ function renderGames() {
       '<span class="game-icon">'+(iconMap[g.pkg]||'&#x1F3AE;')+'</span>'+
       '<div class="game-name">'+g.name+'</div>'+
       '<div class="game-pkg">'+g.pkg+'</div>';
-    card.addEventListener('click', function(){ selectGame(g.pkg, g.name); });
+    card.addEventListener('click', function(){ selectGame(g.pkg); });
     grid.appendChild(card);
   });
 }
 
 function loadUids(pkg) {
   var tags = document.getElementById('userTags');
-  tags.innerHTML = '<span style="font-size:12px;color:var(--text-light);padding:6px 0;">加载分区...</span>';
+  tags.innerHTML = '<span style="font-size:12px;color:var(--text-light);padding:6px 0;">扫描分区中...</span>';
   api('uids', {pkg:pkg}).then(function(r){
-    if (r.ok && r.uids) {
+    if (r.ok && r.uids && r.uids.length > 0) {
       uids = r.uids;
-      if (uids.length > 0) selectedUid = uids[0];
+      selectedUid = uids[0];
       renderUserTags();
     } else {
       tags.innerHTML = '<span style="font-size:12px;color:#e06060;padding:6px 0;">该游戏未安装或无数据</span>';
@@ -454,14 +551,14 @@ function loadUids(pkg) {
 function renderUserTags() {
   var tags = document.getElementById('userTags');
   if (uids.length === 0) {
-    tags.innerHTML = '<span style="font-size:12px;color:var(--text-light);padding:6px 0;">先选择游戏</span>';
+    tags.innerHTML = '<span style="font-size:12px;color:var(--text-light);padding:6px 0;">请先选择游戏</span>';
     return;
   }
   tags.innerHTML = '';
   uids.forEach(function(uid){
     var tag = document.createElement('span');
     tag.className = 'user-tag';
-    tag.textContent = 'user/' + uid;
+    tag.textContent = 'user / ' + uid;
     if (uid === selectedUid) tag.classList.add('selected');
     tag.addEventListener('click', function(){
       selectedUid = uid;
@@ -476,26 +573,26 @@ document.getElementById('btnBackup').addEventListener('click', function(){
   var remark = document.getElementById('remarkInput').value.trim() || '未命名';
   var btn = this;
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>备份中...';
+  btn.innerHTML = '<span class="spinner"></span>备份中';
   api('backup', {pkg:selectedPkg, uid:selectedUid||'0', remark:remark}).then(function(r){
     if (r.ok) {
-      toast('备份完成: '+remark, 'success');
+      toast(remark + ' 备份完成', 'success');
       loadBackupList();
     } else {
-      toast('备份失败: '+(r.error||'未知错误'), 'error');
+      toast('失败: '+(r.error||'未知'), 'error');
     }
   }).finally(function(){
     btn.disabled = false;
-    btn.textContent = '存号';
+    btn.textContent = '存 号';
   });
 });
 
 function restoreBackup(uid, name, pkg) {
   api('restore', {pkg:pkg, uid:uid, name:name}).then(function(r){
     if (r.ok) {
-      toast('恢复完成: '+name, 'success');
+      toast(name + ' 恢复完成', 'success');
     } else {
-      toast('恢复失败: '+(r.error||'未知错误'), 'error');
+      toast('失败: '+(r.error||'未知'), 'error');
     }
   });
 }
@@ -504,10 +601,10 @@ document.getElementById('btnRefresh').addEventListener('click', loadBackupList);
 
 function loadBackupList() {
   var list = document.getElementById('backupList');
-  list.innerHTML = '<div class="empty"><span class="empty-icon">loading...</span></div>';
+  list.innerHTML = '<div class="empty"><span class="empty-icon">. . .</span>加载中</div>';
   api('list').then(function(r){
     if (!r.ok || !r.items || r.items.length === 0) {
-      list.innerHTML = '<div class="empty"><span class="empty-icon">(^^)</span>暂无备份</div>';
+      list.innerHTML = '<div class="empty"><span class="empty-icon">&#x2764;</span>暂无备份<br><small style="font-size:11px;opacity:.6;">选择游戏后点击存号</small></div>';
       return;
     }
     list.innerHTML = '';
@@ -521,7 +618,7 @@ function loadBackupList() {
         '<div class="name">'+pkg+'</div>'+
         '<div class="meta">'+remark+' &middot; user/'+it.uid+'</div>'+
         '</div>'+
-        '<button class="btn btn-green restore-btn">上号</button>';
+        '<button class="btn btn-green restore-btn">上 号</button>';
       item.querySelector('.restore-btn').addEventListener('click', function(){
         restoreBackup(it.uid, it.name, pkg);
       });
@@ -529,13 +626,6 @@ function loadBackupList() {
     });
   });
 }
-
-api('status').then(function(r){
-  if (r.ok) {
-    VERSION = r.version || '-';
-    document.getElementById('versionBadge').textContent = 'v' + VERSION;
-  }
-});
 
 renderGames();
 loadBackupList();

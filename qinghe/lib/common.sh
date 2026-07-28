@@ -3,7 +3,7 @@
 # 清荷 - 通用工具
 #===============================================================================
 
-QH_VERSION="v2.2.3"
+QH_VERSION="v2.2.4"
 SAVE_DIR="/storage/emulated/0/账号存放位置"
 ACCOUNT_DIRS="databases shared_prefs files no_backup app_webview"
 
