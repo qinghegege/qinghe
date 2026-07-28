@@ -24,10 +24,8 @@ get_param() {
 
 url_decode() {
     local s="$1"
-    s=$(echo "$s" | sed 's/+/ /g')
-    echo "$s" | sed 's/%\([0-9A-F][0-9A-F]\)/\\x\1/gI' | while read -r line; do
-        printf '%b' "$line" 2>/dev/null || echo "$line"
-    done
+    s=$(echo "$s" | sed 's/+/ /g; s/%\([0-9A-F][0-9A-F]\)/\\x\1/gI')
+    printf '%b' "$s" 2>/dev/null || echo "$s"
 }
 
 action=$(get_param "action")
@@ -175,7 +173,8 @@ EOF
                 for bak_dir in "$uid_dir"/*; do
                     [ -d "$bak_dir" ] || continue
                     _bname=$(basename "$bak_dir")
-                    items="$items{\"uid\":\"$_uid\",\"name\":\"$_bname\"},"
+                    _pkg="${_bname%%_*}"
+                    items="$items{\"uid\":\"$_uid\",\"name\":\"$_bname\",\"pkg\":\"$_pkg\"},"
                 done
             done
         fi

@@ -14,4 +14,4 @@ EOF
 echo "[清荷] 启动 Web 服务: http://127.0.0.1:$PORT"
 echo "[清荷] 按 Ctrl+C 停止"
 
-busybox httpd -p "$PORT" -h "$WEB_DIR" -c "$CONF_FILE" -f 2>/dev/null
+busybox httpd -p "$PORT" -h "$WEB_DIR" -c "$CONF_FILE" -f

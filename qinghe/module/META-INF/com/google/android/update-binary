@@ -18,7 +18,7 @@ api_level_arch_detect 2>/dev/null || true
 MODPATH=/data/adb/modules/qinghe
 
 ui_print "====================================="
-ui_print "  清荷 v2.2.1"
+ui_print "  清荷 v2.2.2"
 ui_print "  腾讯手游账号本地切换器"
 ui_print "====================================="
 

@@ -134,7 +134,7 @@ do_backup() {
 
     for dir in $ACCOUNT_DIRS; do
         [ -d "$src/$dir" ] || { warn "目录 $src/$dir 不存在，跳过"; continue; }
-        find "$src/$dir" -type f 2>/dev/null | while read f; do
+        for f in $(find "$src/$dir" -type f 2>/dev/null); do
             rel="${f#$src/}"
             mkdir -p "$(dirname "$dest/$rel")" 2>/dev/null
             if cp -a "$f" "$dest/$rel" 2>/dev/null; then
@@ -145,7 +145,6 @@ do_backup() {
             [ "$QH_NO_CONFIRM" != "1" ] && show_progress "$current" "$total"
         done
     done
-    wait
     [ "$QH_NO_CONFIRM" != "1" ] && echo ""
 
     [ -n "$failed" ] && echo -e "$failed"
