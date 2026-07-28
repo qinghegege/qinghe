@@ -1,7 +1,11 @@
 #!/system/bin/sh
 #===============================================================================
 # 清荷 - 存号/上号核心逻辑
+# 备份: databases shared_prefs files no_backup app_webview
+# 恢复: force-stop -> rm -> cp -> chown -R -> restorecon -R
 #===============================================================================
+
+. "$SCRIPT_DIR/lib/common.sh"
 
 get_all_uid() {
     local uid_list=()
@@ -14,46 +18,49 @@ get_all_uid() {
     echo "${uid_list[@]}"
 }
 
-do_save() {
-    local uid="$1"
-    local pkg="$2"
-    local remark="$3"
-
-    mkdir -p "$SAVE_DIR/$uid"
-    local src="/data/user/$uid/$pkg/files/itop_login.txt"
-    local dst
-    if [ -n "$remark" ]; then
-        dst="$SAVE_DIR/$uid/${remark}_${pkg}_itop_login.txt"
-    else
-        dst="$SAVE_DIR/$uid/${pkg}_itop_login.txt"
-    fi
-
-    if [ ! -f "$src" ]; then
-        echo "失败: 文件不存在 $src"
-        return 1
-    fi
-
-    cp "$src" "$dst"
-    echo "保存完成: user/$uid -> $dst"
+count_backup_files() {
+    local src="$1"
+    local count=0
+    for dir in $ACCOUNT_DIRS; do
+        if [ -d "$src/$dir" ]; then
+            count=$((count + $(find "$src/$dir" -type f 2>/dev/null | wc -l)))
+        fi
+    done
+    echo $count
 }
 
-save_account() {
+show_progress() {
+    local current="$1" total="$2"
+    local pct=$((current * 100 / (total > 0 ? total : 1)))
+    local bar=""
+    local i=0
+    while [ $i -lt 10 ]; do
+        [ $((i * 10)) -lt $pct ] && bar="${bar}#" || bar="${bar}-"
+        i=$((i + 1))
+    done
+    printf "\r  [%s] %d%%" "$bar" "$pct"
+}
+
+#===============================================================================
+# 存号 - 备份五目录到 SD 卡
+#===============================================================================
+backup_account() {
     local pkg="$1"
 
     local valid_uids=()
     local all_uids=($(get_all_uid))
     for uid in "${all_uids[@]}"; do
-        if [ -f "/data/user/$uid/$pkg/files/itop_login.txt" ]; then
+        if [ -d "/data/user/$uid/$pkg" ]; then
             valid_uids+=("$uid")
         fi
     done
 
     if [ ${#valid_uids[@]} -eq 0 ]; then
-        echo "未在任何 user 分区找到该游戏的登录文件!"
+        warn "未在任何 user 分区找到 $pkg"
         return 1
     fi
 
-    echo "检测到以下可用账号分区："
+    echo "检测到以下可用分区："
     local i=1
     for uid in "${valid_uids[@]}"; do
         echo "  $i. user/$uid"
@@ -61,7 +68,7 @@ save_account() {
     done
     echo "  $i. 一键批量保存全部"
 
-    echo -n "请选择序号："
+    echo -n "选择："
     read sel
 
     if [ "$sel" = "$i" ]; then
@@ -69,107 +76,248 @@ save_account() {
         read batch_rm
         echo ""
         for uid in "${valid_uids[@]}"; do
-            do_save "$uid" "$pkg" "$batch_rm"
+            do_backup "$uid" "$pkg" "$batch_rm"
         done
-        echo "全部账号批量保存完毕"
+        echo ""
+        info "全部备份完成"
     else
         local idx=$((sel - 1))
         local uid="${valid_uids[$idx]}"
-
-        echo "1. 无备注"
-        echo "2. 自定义备注"
-        echo -n "选择："
-        read opt
-        local rm=""
-        if [ "$opt" = "2" ]; then
-            echo -n "输入备注："
-            read rm
-        fi
-        do_save "$uid" "$pkg" "$rm"
+        echo -n "输入备注名（如 大号）："
+        read rm
+        do_backup "$uid" "$pkg" "$rm"
     fi
 }
 
+do_backup() {
+    local uid="$1"
+    local pkg="$2"
+    local remark="$3"
+
+    local src="/data/user/$uid/$pkg"
+
+    [ -z "$remark" ] && remark="未命名"
+    local safe_rm=$(echo "$remark" | tr ' /' '__')
+    local backup_name="${pkg}_${safe_rm}"
+
+    local dest="$SAVE_DIR/$uid/$backup_name"
+
+    if [ -d "$dest" ]; then
+        echo -n "备份 [$backup_name] 已存在，覆盖? (y/n): "
+        read ow
+        [ "$ow" != "y" ] && [ "$ow" != "Y" ] && return
+        rm -rf "$dest"
+    fi
+    mkdir -p "$dest"
+
+    if [ ! -d "$src" ]; then
+        warn "源目录 $src 不存在"
+        return 1
+    fi
+
+    info "备份 user/$uid -> $backup_name"
+
+    am force-stop "$pkg" 2>/dev/null
+    sleep 1
+
+    local total=$(count_backup_files "$src")
+    [ $total -eq 0 ] && total=1
+    local current=0
+    local failed=""
+
+    for dir in $ACCOUNT_DIRS; do
+        if [ -d "$src/$dir" ]; then
+            find "$src/$dir" -type f 2>/dev/null | while read f; do
+                local rel="${f#$src/}"
+                mkdir -p "$(dirname "$dest/$rel")" 2>/dev/null
+                if cp -a "$f" "$dest/$rel" 2>/dev/null; then
+                    current=$((current + 1))
+                else
+                    failed="${failed}\n${RED}复制失败: $f${RESET}"
+                fi
+                show_progress "$current" "$total"
+            done
+        else
+            warn "目录 $src/$dir 不存在，跳过"
+        fi
+    done
+    wait
+    echo ""
+
+    if [ -n "$failed" ]; then
+        echo -e "$failed"
+    fi
+
+    generate_restore_script "$uid" "$pkg" "$backup_name" "$remark"
+    info "备份完成: $dest"
+}
+
+generate_restore_script() {
+    local uid="$1"
+    local pkg="$2"
+    local backup_name="$3"
+    local remark="$4"
+
+    mkdir -p "$SAVE_DIR/restore_scripts"
+
+    local script_file="$SAVE_DIR/restore_scripts/${backup_name}.sh"
+    local src="/data/user/$uid/$pkg"
+    local bak="$SAVE_DIR/$uid/$backup_name"
+
+    cat > "$script_file" << EOF
+#!/system/bin/sh
+#===============================================================================
+# 清荷恢复脚本 - ${remark} -> user/${uid}
+# 包名: ${pkg}
+# 备份: ${backup_name}
+# 生成时间: $(date '+%Y-%m-%d %H:%M')
+#===============================================================================
+if [ \$(id -u) -ne 0 ]; then
+    echo "错误: 需要 root 权限"
+    exit 1
+fi
+
+PACKAGE="${pkg}"
+USER_ID="${uid}"
+SRC="/data/user/${uid}/${pkg}"
+BAK="${bak}"
+
+echo "清荷 - 正在恢复账号 [${remark}] -> user/${uid}"
+
+am force-stop "\$PACKAGE" 2>/dev/null
+sleep 2
+
+for dir in ${ACCOUNT_DIRS}; do
+    if [ -d "\$BAK/\$dir" ]; then
+        rm -rf "\$SRC/\$dir"
+        cp -a "\$BAK/\$dir" "\$SRC/\$dir"
+    fi
+done
+
+chown -R \$(stat -c "%u:%g" "\$SRC" 2>/dev/null) "\$SRC" 2>/dev/null
+
+if command -v restorecon >/dev/null 2>&1; then
+    restorecon -R "\$SRC" 2>/dev/null
+fi
+
+echo "恢复完成"
+EOF
+
+    chmod 755 "$script_file"
+}
+
+#===============================================================================
+# 上号 - 从 SD 卡恢复五目录到游戏
+#===============================================================================
 restore_account() {
     local pkg="$1"
 
-    local files=()
-    local file_uids=()
-    for subdir in "$SAVE_DIR"/*; do
-        [ -d "$subdir" ] || continue
-        local uid=$(basename "$subdir")
-        if [ "$uid" -eq "$uid" ] 2>/dev/null; then
-            for f in "$subdir"/*; do
-                [ -f "$f" ] || continue
-                local fname=$(basename "$f")
-                if echo "$fname" | grep -q "$pkg"; then
-                    files+=("$fname")
-                    file_uids+=("$uid")
+    local candidates=()
+    local cand_uids=()
+    local cand_remarks=()
+
+    for uid_dir in "$SAVE_DIR"/*; do
+        [ -d "$uid_dir" ] || continue
+        local uid=$(basename "$uid_dir")
+        if [ "$uid" != "restore_scripts" ] && [ "$uid" -eq "$uid" ] 2>/dev/null; then
+            for bak_dir in "$uid_dir"/*; do
+                [ -d "$bak_dir" ] || continue
+                local bname=$(basename "$bak_dir")
+                if echo "$bname" | grep -q "^${pkg}_"; then
+                    local remark="${bname#${pkg}_}"
+                    candidates+=("$bak_dir")
+                    cand_uids+=("$uid")
+                    cand_remarks+=("$remark")
                 fi
             done
         fi
     done
 
-    if [ ${#files[@]} -eq 0 ]; then
-        echo "未找到包含 $pkg 的账号文件!"
+    if [ ${#candidates[@]} -eq 0 ]; then
+        warn "未找到 $pkg 的备份"
         return 1
     fi
 
-    echo "匹配到以下账号文件："
+    echo "匹配到以下备份："
     local i=1
-    for idx in "${!files[@]}"; do
-        echo "  $((i)). [user/${file_uids[$idx]}] ${files[$idx]}"
+    for idx in "${!candidates[@]}"; do
+        echo "  $((i)). [user/${cand_uids[$idx]}] ${cand_remarks[$idx]}"
         i=$((i+1))
     done
 
-    echo -n "选择要使用的文件序号："
+    echo -n "选择要恢复的序号："
     read sel
     local idx=$((sel - 1))
-    local file_name="${files[$idx]}"
-    local target_uid="${file_uids[$idx]}"
-    local src="$SAVE_DIR/$target_uid/$file_name"
+    local dest_uid="${cand_uids[$idx]}"
+    local bak_path="${candidates[$idx]}"
+    local src="/data/user/$dest_uid/$pkg"
 
-    local dest_dir="/data/user/$target_uid/$pkg/files"
-    local dest_file="$dest_dir/itop_login.txt"
-
-    mkdir -p "$dest_dir"
-
-    if [ -f "$dest_file" ]; then
-        echo "目标目录已存在 itop_login.txt"
-        echo "1. 覆盖导入"
-        echo "2. 取消"
-        echo -n "选择："
-        read opt
-        if [ "$opt" != "1" ]; then
-            echo "已取消"
-            return 0
-        fi
-        rm -f "$dest_file"
+    if [ ! -d "$src" ]; then
+        warn "目标目录 $src 不存在，游戏可能未安装"
+        return 1
     fi
 
-    cp "$src" "$dest_file"
-    chmod 777 "$dest_file"
-    echo "上号完成: $src -> /data/user/$target_uid/$pkg/files/"
+    info "恢复 [$dest_uid] ${cand_remarks[$idx]}"
+
+    am force-stop "$pkg" 2>/dev/null
+    sleep 2
+
+    for dir in $ACCOUNT_DIRS; do
+        if [ -d "$bak_path/$dir" ]; then
+            rm -rf "$src/$dir"
+            cp -a "$bak_path/$dir" "$src/$dir"
+        fi
+    done
+
+    chown -R $(stat -c "%u:%g" "$src" 2>/dev/null) "$src" 2>/dev/null
+
+    if command -v restorecon >/dev/null 2>&1; then
+        restorecon -R "$src" 2>/dev/null
+    fi
+
+    info "恢复完成"
 }
 
+#===============================================================================
+# 查看已保存
+#===============================================================================
 list_accounts() {
     echo "存储位置: $SAVE_DIR"
     echo ""
+
     if [ ! -d "$SAVE_DIR" ]; then
-        echo "(暂无保存的账号)"
+        echo "(暂无备份)"
         return
     fi
 
-    local count=0
-    for subdir in "$SAVE_DIR"/*; do
-        [ -d "$subdir" ] || continue
-        local uid=$(basename "$subdir")
-        echo "--- user/$uid ---"
-        for f in "$subdir"/*; do
-            [ -f "$f" ] || continue
-            echo "  $(basename "$f")"
-            count=$((count+1))
-        done
-        echo ""
+    local total=0
+    for uid_dir in "$SAVE_DIR"/*; do
+        [ -d "$uid_dir" ] || continue
+        local uid=$(basename "$uid_dir")
+        if [ "$uid" = "restore_scripts" ]; then continue; fi
+        if [ "$uid" -eq "$uid" ] 2>/dev/null; then
+            for bak_dir in "$uid_dir"/*; do
+                [ -d "$bak_dir" ] && total=$((total+1))
+            done
+        fi
     done
-    echo "共 $count 个账号"
+
+    echo "共 $total 个备份"
+    echo ""
+
+    for uid_dir in "$SAVE_DIR"/*; do
+        [ -d "$uid_dir" ] || continue
+        local uid=$(basename "$uid_dir")
+        if [ "$uid" = "restore_scripts" ]; then continue; fi
+        if [ "$uid" -eq "$uid" ] 2>/dev/null; then
+            for bak_dir in "$uid_dir"/*; do
+                [ -d "$bak_dir" ] || continue
+                local bname=$(basename "$bak_dir")
+                echo "  [user/$uid] $bname"
+            done
+        fi
+    done
+
+    echo ""
+    echo "一键恢复脚本: $SAVE_DIR/restore_scripts/"
 }

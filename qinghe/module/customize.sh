@@ -8,7 +8,7 @@ MODPATH="${MODPATH:-/data/adb/modules/$MODID}"
 
 ui_print "====================================="
 ui_print "  清荷 - 腾讯手游账号本地切换器"
-ui_print "  v2.0.0"
+ui_print "  v2.1.0"
 ui_print "====================================="
 
 ui_print "- 创建数据目录..."
@@ -28,8 +28,8 @@ chmod 755 "$MODPATH/system/bin/qh" 2>/dev/null
 
 ui_print ""
 ui_print "安装完成!"
-ui_print "  qh save <包名>   存号"
-ui_print "  qh login <包名>  上号"
+ui_print "  qh save <包名>   存号 (备份五目录)"
+ui_print "  qh login <包名>  上号 (恢复五目录)"
 ui_print "  qh list          查看已保存"
 ui_print "  qh               交互菜单"
 ui_print "====================================="

@@ -1,6 +1,6 @@
 id=qinghe
 name=清荷 - 腾讯手游账号本地切换器
-version=v2.0.0
-versionCode=200
+version=v2.1.0
+versionCode=210
 author=qinghe
-description=腾讯手游账号本地切换器。存号 = 导出 itop_login.txt，上号 = 导入 itop_login.txt。支持多用户分区（双开）。
+description=腾讯手游账号本地切换器。备份 databases shared_prefs files no_backup app_webview 五目录。支持多用户分区、SELinux 修复。

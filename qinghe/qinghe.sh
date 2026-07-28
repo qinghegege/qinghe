@@ -1,7 +1,8 @@
 #!/system/bin/sh
 #===============================================================================
 # 清荷 - 腾讯手游账号本地切换器
-# 核心逻辑: 存号 = 复制 itop_login.txt 出来, 上号 = 复制回去
+# 备份 databases shared_prefs files no_backup app_webview
+# 恢复 force-stop -> cp -> chown -> restorecon
 #===============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -14,9 +15,9 @@ show_help() {
     echo "用法: qh [命令]"
     echo ""
     echo "命令:"
-    echo "  save <包名>    存号（导出 itop_login.txt）"
-    echo "  login <包名>   上号（导入 itop_login.txt）"
-    echo "  list           列出已保存的账号"
+    echo "  save <包名>    存号（备份五目录）"
+    echo "  login <包名>   上号（恢复五目录）"
+    echo "  list           查看已保存账号"
     echo "  help           显示此帮助"
     echo ""
     echo "无参数启动交互菜单"
@@ -26,15 +27,19 @@ interactive_menu() {
     while true; do
         mkdir -p "$SAVE_DIR"
         clear
-        echo "===================================="
-        echo "   清荷 $QH_VERSION"
-        echo "   腾讯手游账号本地切换器"
-        echo "===================================="
         echo ""
-        echo "1. 存号 (导出 itop_login.txt)"
-        echo "2. 上号 (导入 itop_login.txt)"
-        echo "3. 查看已保存账号"
-        echo "4. 退出"
+        echo -e "${CYAN}====================================${RESET}"
+        echo -e "${YELLOW}   清荷 $QH_VERSION${RESET}"
+        echo -e "${CYAN}   腾讯手游账号本地切换器${RESET}"
+        echo -e "${CYAN}====================================${RESET}"
+        echo ""
+        echo -e "${GREEN}1. 存号${RESET}   (备份五目录到 SD 卡)"
+        echo -e "${GREEN}2. 上号${RESET}   (从 SD 卡恢复五目录)"
+        echo -e "${GREEN}3. 查看${RESET}   已保存账号"
+        echo -e "${GREEN}4. 退出${RESET}"
+        echo ""
+        echo -e "${YELLOW}备份内容: databases shared_prefs files no_backup app_webview${RESET}"
+        echo -e "${YELLOW}存储位置: $SAVE_DIR${RESET}"
         echo ""
         echo -n "选择: "
         read opt
@@ -44,9 +49,9 @@ interactive_menu() {
                 echo -n "输入游戏包名: "
                 read pkg
                 [ -z "$pkg" ] && continue
-                save_account "$pkg"
+                backup_account "$pkg"
                 echo ""
-                echo "按回车返回..."
+                echo -n "按回车返回..."
                 read
                 ;;
             2)
@@ -56,14 +61,14 @@ interactive_menu() {
                 [ -z "$pkg" ] && continue
                 restore_account "$pkg"
                 echo ""
-                echo "按回车返回..."
+                echo -n "按回车返回..."
                 read
                 ;;
             3)
                 echo ""
                 list_accounts
                 echo ""
-                echo "按回车返回..."
+                echo -n "按回车返回..."
                 read
                 ;;
             4)
@@ -78,7 +83,7 @@ require_root
 case "${1:-}" in
     save)
         [ -z "$2" ] && die "用法: qh save <包名>"
-        save_account "$2"
+        backup_account "$2"
         ;;
     login)
         [ -z "$2" ] && die "用法: qh login <包名>"
