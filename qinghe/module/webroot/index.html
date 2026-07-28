@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>清荷 - 账号切换</title>
+<style>
+:root {
+  --pink: #f8a0b8;
+  --pink-light: #fef0f4;
+  --pink-dark: #e4788e;
+  --white: #fff;
+  --text: #5d4e5d;
+  --text-light: #8a7a8a;
+  --green: #65c294;
+  --shadow: 0 2px 12px rgba(248,160,184,.18);
+  --radius: 16px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:linear-gradient(160deg, #fff0f3 0%, #fef0f4 40%, #fde8ee 100%);
+  color:var(--text);
+  min-height:100vh;
+  padding-bottom:40px;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* ---- header ---- */
+.header {
+  background:linear-gradient(135deg, #f9a8bc 0%, #f898b0 50%, #f0889c 100%);
+  padding:20px 24px 18px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.header::after {
+  content:'';
+  position:absolute;
+  bottom:-16px; left:50%;
+  transform:translateX(-50%);
+  width:0; height:0;
+  border-left:16px solid transparent;
+  border-right:16px solid transparent;
+  border-top:18px solid #f0889c;
+}
+.title {
+  font-size:22px; font-weight:700; color:var(--white);
+  letter-spacing:1px;
+}
+.subtitle {
+  font-size:12px; color:rgba(255,255,255,.75);
+  margin-top:2px;
+}
+
+/* ---- badge ---- */
+.badge {
+  display:inline-block;
+  background:rgba(255,255,255,.25);
+  color:var(--white);
+  font-size:11px;
+  padding:2px 10px;
+  border-radius:10px;
+  margin-top:6px;
+}
+
+/* ---- container ---- */
+.container {
+  max-width:420px; margin:0 auto;
+  padding:20px 16px;
+}
+
+/* ---- game cards ---- */
+.section-title {
+  font-size:14px; font-weight:600; color:var(--text-light);
+  margin-bottom:10px; padding-left:4px;
+  display:flex; align-items:center; gap:6px;
+}
+.section-title::before {
+  content:''; display:inline-block;
+  width:4px; height:16px;
+  background:var(--pink); border-radius:2px;
+}
+
+.game-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:20px;
+}
+.game-card {
+  background:var(--white);
+  border-radius:var(--radius);
+  padding:14px 12px;
+  text-align:center;
+  box-shadow:var(--shadow);
+  cursor:pointer;
+  transition:transform .15s,box-shadow .15s;
+  border:2px solid transparent;
+  position:relative;
+  overflow:hidden;
+}
+.game-card:active { transform:scale(.96); }
+.game-card.selected {
+  border-color:var(--pink);
+  box-shadow:0 0 0 3px rgba(248,160,184,.25),var(--shadow);
+}
+.game-card.selected::after {
+  content:'';
+  position:absolute; top:8px; right:8px;
+  width:18px; height:18px;
+  background:var(--pink);
+  border-radius:50%;
+}
+.game-card.selected::before {
+  content:'';
+  position:absolute; top:11px; right:13px;
+  width:6px; height:10px;
+  border:solid var(--white);
+  border-width:0 2px 2px 0;
+  transform:rotate(45deg);
+  z-index:1;
+}
+.game-icon {
+  font-size:32px; margin-bottom:6px;
+  display:block;
+}
+.game-name {
+  font-size:13px; font-weight:600;
+}
+.game-pkg {
+  font-size:10px; color:var(--text-light);
+  margin-top:3px;
+  word-break:break-all;
+}
+
+/* ---- manual input ---- */
+.manual-row {
+  display:flex; gap:8px;
+  margin-bottom:20px;
+}
+.input {
+  flex:1;
+  border:2px solid #f5dee6;
+  border-radius:12px;
+  padding:10px 14px;
+  font-size:14px; color:var(--text);
+  background:var(--white);
+  outline:none;
+  transition:border-color .2s;
+}
+.input:focus { border-color:var(--pink); }
+.input::placeholder { color:#ccc; }
+
+.btn {
+  border:none;
+  border-radius:12px;
+  padding:10px 18px;
+  font-size:14px; font-weight:600;
+  cursor:pointer;
+  transition:opacity .15s,transform .15s;
+  white-space:nowrap;
+}
+.btn:active { opacity:.8; transform:scale(.96); }
+.btn-primary {
+  background:linear-gradient(135deg, var(--pink), var(--pink-dark));
+  color:var(--white);
+}
+.btn-outline {
+  background:var(--white);
+  color:var(--pink-dark);
+  border:2px solid var(--pink);
+}
+.btn-green {
+  background:linear-gradient(135deg, var(--green), #4ea87a);
+  color:var(--white);
+}
+.btn-block { display:block; width:100%; text-align:center; }
+
+/* ---- user selector ---- */
+.user-tags {
+  display:flex; gap:8px; flex-wrap:wrap;
+  margin-bottom:16px;
+}
+.user-tag {
+  padding:6px 14px;
+  border-radius:20px;
+  font-size:13px;
+  background:var(--white);
+  border:2px solid #f5dee6;
+  cursor:pointer;
+  transition:all .15s;
+}
+.user-tag.selected {
+  background:var(--pink-light);
+  border-color:var(--pink);
+  color:var(--pink-dark);
+  font-weight:600;
+}
+
+/* ---- remark input ---- */
+.remark-row {
+  display:flex; gap:8px;
+  margin-bottom:16px;
+}
+
+/* ---- backup list ---- */
+.backup-list {
+  display:flex; flex-direction:column;
+  gap:8px;
+}
+.backup-item {
+  background:var(--white);
+  border-radius:12px;
+  padding:12px 14px;
+  box-shadow:var(--shadow);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-left:4px solid var(--pink);
+}
+.backup-info {
+  flex:1; min-width:0;
+}
+.backup-info .name {
+  font-size:14px; font-weight:600;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.backup-info .meta {
+  font-size:11px; color:var(--text-light);
+  margin-top:2px;
+}
+.backup-item .restore-btn {
+  flex-shrink:0;
+  margin-left:12px;
+  padding:6px 14px;
+  font-size:12px;
+}
+
+/* ---- toast ---- */
+.toast {
+  position:fixed; top:20px; left:50%;
+  transform:translateX(-50%);
+  background:var(--text);
+  color:var(--white);
+  padding:10px 24px;
+  border-radius:20px;
+  font-size:13px;
+  z-index:999;
+  opacity:0;
+  transition:opacity .3s;
+  pointer-events:none;
+  max-width:90vw;
+  text-align:center;
+}
+.toast.show { opacity:1; }
+.toast.success { background:var(--green); }
+.toast.error { background:#e06060; }
+
+/* ---- empty ---- */
+.empty {
+  text-align:center; padding:32px 0;
+  color:var(--text-light);
+  font-size:14px;
+}
+.empty-icon { font-size:40px; margin-bottom:8px; display:block; }
+
+/* ---- footer ---- */
+.footer {
+  text-align:center;
+  padding:16px;
+  color:var(--text-light);
+  font-size:11px;
+  opacity:.6;
+}
+
+/* ---- spinner ---- */
+.spinner {
+  display:inline-block;
+  width:16px; height:16px;
+  border:2px solid rgba(255,255,255,.3);
+  border-top-color:var(--white);
+  border-radius:50%;
+  animation:spin .6s linear infinite;
+  vertical-align:middle;
+  margin-right:6px;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ---- divider ---- */
+.divider {
+  height:1px;
+  background:linear-gradient(90deg, transparent, #f5dee6, transparent);
+  margin:20px 0;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">清荷 / Qinghe</div>
+  <div class="subtitle">腾讯手游账号本地切换器</div>
+  <div class="badge" id="versionBadge">v-</div>
+</div>
+
+<div class="container">
+
+  <!-- 游戏选择 -->
+  <div class="section-title">选择游戏</div>
+  <div class="game-grid" id="gameGrid"></div>
+
+  <!-- 手动输入 -->
+  <div class="manual-row">
+    <input class="input" id="manualPkg" placeholder="或手动输入包名..." autocomplete="off">
+    <button class="btn btn-outline" id="btnManualSelect">确定</button>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 操作区 -->
+  <div class="section-title">操作</div>
+
+  <div class="user-tags" id="userTags"></div>
+
+  <!-- 备注 -->
+  <div class="remark-row">
+    <input class="input" id="remarkInput" placeholder="备注名（如 大号）" autocomplete="off">
+  </div>
+
+  <div style="display:flex; gap:10px; margin-bottom:20px;">
+    <button class="btn btn-primary btn-block" id="btnBackup">存号</button>
+    <button class="btn btn-outline btn-block" id="btnRefresh">刷新</button>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 已保存 -->
+  <div class="section-title">已保存账号</div>
+  <div class="backup-list" id="backupList">
+    <div class="empty"><span class="empty-icon">loading...</span></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="footer">清荷 v2.2.3 &middot; Powered by busybox httpd</div>
+
+<script>
+var VERSION = '-';
+var selectedPkg = '';
+var selectedUid = '';
+var uids = [];
+
+var games = [
+  { name:'和平精英', pkg:'com.tencent.tmgp.pubgmhd', icon:'' },
+  { name:'王者荣耀', pkg:'com.tencent.tmgp.sgame', icon:'' },
+  { name:'无畏契约', pkg:'com.tencent.tmgp.codev', icon:'' },
+  { name:'三角洲行动', pkg:'com.tencent.tmgp.dfm', icon:'' },
+  { name:'CF 手游', pkg:'com.tencent.tmgp.cf', icon:'' },
+];
+
+var iconMap = {
+  'com.tencent.tmgp.pubgmhd':'&#x1F52B;',
+  'com.tencent.tmgp.sgame':'&#x2694;&#xFE0F;',
+  'com.tencent.tmgp.codev':'&#x1F4A3;',
+  'com.tencent.tmgp.dfm':'&#x1F3AF;',
+  'com.tencent.tmgp.cf':'&#x1F52B;',
+};
+
+function toast(msg, type) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + (type||'') + ' show';
+  clearTimeout(el._timer);
+  el._timer = setTimeout(function(){ el.className='toast'; }, 2000);
+}
+
+function api(action, params) {
+  var qs = 'action=' + encodeURIComponent(action);
+  if (params) {
+    for (var k in params) {
+      qs += '&' + k + '=' + encodeURIComponent(params[k]);
+    }
+  }
+  return fetch('/cgi-bin/api.sh?' + qs)
+    .then(function(r){ return r.json(); })
+    .catch(function(e){ return {ok:false,error:'网络错误: '+e.message}; });
+}
+
+function selectGame(pkg, name) {
+  selectedPkg = pkg;
+  document.querySelectorAll('.game-card').forEach(function(c){ c.classList.remove('selected'); });
+  var el = document.getElementById('card_' + pkg.replace(/\./g,'_'));
+  if (el) el.classList.add('selected');
+  document.getElementById('manualPkg').value = pkg;
+  loadUids(pkg);
+}
+
+document.getElementById('btnManualSelect').addEventListener('click', function(){
+  var pkg = document.getElementById('manualPkg').value.trim();
+  if (!pkg) return;
+  selectedPkg = pkg;
+  document.querySelectorAll('.game-card').forEach(function(c){ c.classList.remove('selected'); });
+  loadUids(pkg);
+});
+
+function renderGames() {
+  var grid = document.getElementById('gameGrid');
+  grid.innerHTML = '';
+  games.forEach(function(g){
+    var card = document.createElement('div');
+    card.className = 'game-card';
+    card.id = 'card_' + g.pkg.replace(/\./g,'_');
+    card.innerHTML =
+      '<span class="game-icon">'+(iconMap[g.pkg]||'&#x1F3AE;')+'</span>'+
+      '<div class="game-name">'+g.name+'</div>'+
+      '<div class="game-pkg">'+g.pkg+'</div>';
+    card.addEventListener('click', function(){ selectGame(g.pkg, g.name); });
+    grid.appendChild(card);
+  });
+}
+
+function loadUids(pkg) {
+  var tags = document.getElementById('userTags');
+  tags.innerHTML = '<span style="font-size:12px;color:var(--text-light);padding:6px 0;">加载分区...</span>';
+  api('uids', {pkg:pkg}).then(function(r){
+    if (r.ok && r.uids) {
+      uids = r.uids;
+      if (uids.length > 0) selectedUid = uids[0];
+      renderUserTags();
+    } else {
+      tags.innerHTML = '<span style="font-size:12px;color:#e06060;padding:6px 0;">该游戏未安装或无数据</span>';
+      uids = [];
+    }
+  });
+}
+
+function renderUserTags() {
+  var tags = document.getElementById('userTags');
+  if (uids.length === 0) {
+    tags.innerHTML = '<span style="font-size:12px;color:var(--text-light);padding:6px 0;">先选择游戏</span>';
+    return;
+  }
+  tags.innerHTML = '';
+  uids.forEach(function(uid){
+    var tag = document.createElement('span');
+    tag.className = 'user-tag';
+    tag.textContent = 'user/' + uid;
+    if (uid === selectedUid) tag.classList.add('selected');
+    tag.addEventListener('click', function(){
+      selectedUid = uid;
+      renderUserTags();
+    });
+    tags.appendChild(tag);
+  });
+}
+
+document.getElementById('btnBackup').addEventListener('click', function(){
+  if (!selectedPkg) { toast('请先选择游戏','error'); return; }
+  var remark = document.getElementById('remarkInput').value.trim() || '未命名';
+  var btn = this;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>备份中...';
+  api('backup', {pkg:selectedPkg, uid:selectedUid||'0', remark:remark}).then(function(r){
+    if (r.ok) {
+      toast('备份完成: '+remark, 'success');
+      loadBackupList();
+    } else {
+      toast('备份失败: '+(r.error||'未知错误'), 'error');
+    }
+  }).finally(function(){
+    btn.disabled = false;
+    btn.textContent = '存号';
+  });
+});
+
+function restoreBackup(uid, name, pkg) {
+  api('restore', {pkg:pkg, uid:uid, name:name}).then(function(r){
+    if (r.ok) {
+      toast('恢复完成: '+name, 'success');
+    } else {
+      toast('恢复失败: '+(r.error||'未知错误'), 'error');
+    }
+  });
+}
+
+document.getElementById('btnRefresh').addEventListener('click', loadBackupList);
+
+function loadBackupList() {
+  var list = document.getElementById('backupList');
+  list.innerHTML = '<div class="empty"><span class="empty-icon">loading...</span></div>';
+  api('list').then(function(r){
+    if (!r.ok || !r.items || r.items.length === 0) {
+      list.innerHTML = '<div class="empty"><span class="empty-icon">(^^)</span>暂无备份</div>';
+      return;
+    }
+    list.innerHTML = '';
+    r.items.forEach(function(it){
+      var pkg = it.pkg || it.name.split('_')[0];
+      var remark = it.name.slice(pkg.length + 1) || '-';
+      var item = document.createElement('div');
+      item.className = 'backup-item';
+      item.innerHTML =
+        '<div class="backup-info">'+
+        '<div class="name">'+pkg+'</div>'+
+        '<div class="meta">'+remark+' &middot; user/'+it.uid+'</div>'+
+        '</div>'+
+        '<button class="btn btn-green restore-btn">上号</button>';
+      item.querySelector('.restore-btn').addEventListener('click', function(){
+        restoreBackup(it.uid, it.name, pkg);
+      });
+      list.appendChild(item);
+    });
+  });
+}
+
+api('status').then(function(r){
+  if (r.ok) {
+    VERSION = r.version || '-';
+    document.getElementById('versionBadge').textContent = 'v' + VERSION;
+  }
+});
+
+renderGames();
+loadBackupList();
+</script>
+</body>
+</html>

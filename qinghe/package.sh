@@ -31,6 +31,8 @@ cp -r "$SCRIPT_DIR/web" "$MODULE_TMP/"
 cp -r "$SCRIPT_DIR/module/META-INF" "$MODULE_TMP/"
 cp "$SCRIPT_DIR/module/module.prop" "$MODULE_TMP/"
 cp "$SCRIPT_DIR/module/customize.sh" "$MODULE_TMP/"
+cp "$SCRIPT_DIR/module/action.sh" "$MODULE_TMP/"
+cp -r "$SCRIPT_DIR/module/webroot" "$MODULE_TMP/"
 
 chmod -R 755 "$MODULE_TMP"
 
