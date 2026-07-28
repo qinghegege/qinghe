@@ -1,6 +1,6 @@
 id=qinghe
 name=清荷 - 腾讯手游账号本地切换器
-version=v2.2.0
-versionCode=220
+version=v2.2.1
+versionCode=221
 author=qinghe
 description=腾讯手游账号本地切换器。备份 databases shared_prefs files no_backup app_webview 五目录。支持多用户分区、SELinux 修复。

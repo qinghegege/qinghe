@@ -8,7 +8,7 @@ MODPATH="${MODPATH:-/data/adb/modules/$MODID}"
 
 ui_print "====================================="
 ui_print "  清荷 - 腾讯手游账号本地切换器"
-ui_print "  v2.2.0"
+ui_print "  v2.2.1"
 ui_print "====================================="
 
 ui_print "- 创建数据目录..."

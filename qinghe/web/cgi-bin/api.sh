@@ -1,39 +1,33 @@
 #!/system/bin/sh
 #===============================================================================
-# 清荷 - CGI API
-# busybox httpd: 所有参数通过 QUERY_STRING 传入 (GET)
+# 清荷 - CGI API (busybox httpd)
 #===============================================================================
 
 WEB_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 MODULE_DIR="$(cd "$WEB_DIR/.." && pwd)"
 SCRIPT_DIR="$MODULE_DIR"
 . "$MODULE_DIR/lib/common.sh"
-. "$MODULE_DIR/lib/account.sh"
 
 echo "Content-Type: application/json"
 echo ""
 
-json_ok() {
-    local data="$1"
-    echo "{\"ok\":true${data:+,$data}}"
-}
-
-json_err() {
-    local msg="$1"
-    echo "{\"ok\":false,\"error\":\"$msg\"}"
-}
+json_ok() { echo "{\"ok\":true${1:+,$1}}"; }
+json_err() { echo "{\"ok\":false,\"error\":\"$1\"}"; }
 
 get_param() {
     local key="$1"
-    echo "$QUERY_STRING" | tr '&' '\n' | while IFS='=' read -r k v; do
-        if [ "$k" = "$key" ]; then
-            printf '%s' "$v"
-        fi
+    for pair in $(echo "$QUERY_STRING" | tr '&' ' '); do
+        local k="${pair%%=*}"
+        [ "$k" = "$key" ] && { echo "${pair#*=}"; return 0; }
     done
 }
 
 url_decode() {
-    echo "$1" | sed 's/+/ /g;s/%\([0-9a-fA-F][0-9a-fA-F]\)/\\x\1/g' | xargs -0 printf '%b' 2>/dev/null || echo "$1"
+    local s="$1"
+    s=$(echo "$s" | sed 's/+/ /g')
+    echo "$s" | sed 's/%\([0-9A-F][0-9A-F]\)/\\x\1/gI' | while read -r line; do
+        printf '%b' "$line" 2>/dev/null || echo "$line"
+    done
 }
 
 action=$(get_param "action")
@@ -48,13 +42,14 @@ case "$action" in
         [ -z "$pkg" ] && { json_err "缺少 pkg 参数"; exit 0; }
 
         uids=""
-        for uid in $(get_all_uid); do
-            if [ -d "/data/user/$uid/$pkg" ]; then
-                uids="$uids\"$uid\","
-            fi
+        for uid in /data/user/*; do
+            [ -d "$uid" ] || continue
+            uid=$(basename "$uid")
+            [ "$uid" -eq "$uid" ] 2>/dev/null || continue
+            [ -d "/data/user/$uid/$pkg" ] || continue
+            uids="$uids\"$uid\","
         done
-        uids="[${uids%,}]"
-        json_ok "\"uids\":$uids"
+        json_ok "\"uids\":[${uids%,}]"
         ;;
 
     backup)
@@ -68,8 +63,64 @@ case "$action" in
         remark=$(url_decode "$remark")
         pkg=$(url_decode "$pkg")
 
-        do_backup "$uid" "$pkg" "$remark" 2>&1
-        json_ok "\"msg\":\"backup done\",\"uid\":\"$uid\",\"pkg\":\"$pkg\""
+        safe_rm=$(echo "$remark" | sed 's/[ /]/_/g')
+        backup_name="${pkg}_${safe_rm}"
+
+        src="/data/user/$uid/$pkg"
+        dest="$SAVE_DIR/$uid/$backup_name"
+
+        if [ ! -d "$src" ]; then
+            json_err "游戏目录不存在: /data/user/$uid/$pkg"
+            exit 0
+        fi
+
+        rm -rf "$dest" 2>/dev/null
+        mkdir -p "$dest" 2>/dev/null
+
+        am force-stop "$pkg" 2>/dev/null
+        sleep 1
+
+        found=0
+        for dir in $ACCOUNT_DIRS; do
+            if [ -d "$src/$dir" ]; then
+                cp -a "$src/$dir" "$dest/" 2>/dev/null
+                found=1
+            fi
+        done
+
+        if [ $found -eq 0 ]; then
+            json_err "无账号数据可备份"
+            exit 0
+        fi
+
+        mkdir -p "$SAVE_DIR/restore_scripts" 2>/dev/null
+        script_file="$SAVE_DIR/restore_scripts/${backup_name}.sh"
+        cat > "$script_file" << EOF
+#!/system/bin/sh
+if [ \$(id -u) -ne 0 ]; then
+    echo "错误: 需要 root 权限"
+    exit 1
+fi
+PACKAGE="$pkg"
+USER_ID="$uid"
+SRC="/data/user/$uid/$pkg"
+BAK="$SAVE_DIR/$uid/$backup_name"
+echo "清荷 - 恢复 [$remark] -> user/$uid"
+am force-stop "\$PACKAGE" 2>/dev/null
+sleep 2
+for dir in $ACCOUNT_DIRS; do
+    if [ -d "\$BAK/\$dir" ]; then
+        rm -rf "\$SRC/\$dir"
+        cp -a "\$BAK/\$dir" "\$SRC/\$dir"
+    fi
+done
+chown -R \$(stat -c "%u:%g" "\$SRC" 2>/dev/null) "\$SRC" 2>/dev/null
+command -v restorecon >/dev/null 2>&1 && restorecon -R "\$SRC" 2>/dev/null
+echo "恢复完成"
+EOF
+        chmod 755 "$script_file" 2>/dev/null
+
+        json_ok "\"uid\":\"$uid\",\"name\":\"$backup_name\""
         ;;
 
     restore)
@@ -88,7 +139,12 @@ case "$action" in
         bak="$SAVE_DIR/$uid/$name"
 
         if [ ! -d "$bak" ]; then
-            json_err "备份 $name 不存在"
+            json_err "备份不存在: $name"
+            exit 0
+        fi
+
+        if [ ! -d "$src" ]; then
+            json_err "游戏目录不存在，请确认游戏已安装"
             exit 0
         fi
 
@@ -98,14 +154,14 @@ case "$action" in
         for dir in $ACCOUNT_DIRS; do
             if [ -d "$bak/$dir" ]; then
                 rm -rf "$src/$dir"
-                cp -a "$bak/$dir" "$src/$dir"
+                cp -a "$bak/$dir" "$src"/
             fi
         done
 
         chown -R $(stat -c "%u:%g" "$src" 2>/dev/null) "$src" 2>/dev/null
         command -v restorecon >/dev/null 2>&1 && restorecon -R "$src" 2>/dev/null
 
-        json_ok "\"msg\":\"restore done\",\"uid\":\"$uid\",\"pkg\":\"$pkg\""
+        json_ok "\"uid\":\"$uid\",\"name\":\"$name\""
         ;;
 
     list)
@@ -113,19 +169,17 @@ case "$action" in
         if [ -d "$SAVE_DIR" ]; then
             for uid_dir in "$SAVE_DIR"/*; do
                 [ -d "$uid_dir" ] || continue
-                local uid=$(basename "$uid_dir")
-                if [ "$uid" = "restore_scripts" ]; then continue; fi
-                if [ "$uid" -eq "$uid" ] 2>/dev/null; then
-                    for bak_dir in "$uid_dir"/*; do
-                        [ -d "$bak_dir" ] || continue
-                        local bname=$(basename "$bak_dir")
-                        items="$items{\"uid\":\"$uid\",\"name\":\"$bname\"},"
-                    done
-                fi
+                _uid=$(basename "$uid_dir")
+                [ "$_uid" = "restore_scripts" ] && continue
+                [ "$_uid" -eq "$_uid" ] 2>/dev/null || continue
+                for bak_dir in "$uid_dir"/*; do
+                    [ -d "$bak_dir" ] || continue
+                    _bname=$(basename "$bak_dir")
+                    items="$items{\"uid\":\"$_uid\",\"name\":\"$_bname\"},"
+                done
             done
         fi
-        items="[${items%,}]"
-        json_ok "\"items\":$items"
+        json_ok "\"items\":[${items%,}]"
         ;;
 
     *)

@@ -343,7 +343,7 @@ body {
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="footer">清荷 v2.2.0 &middot; Powered by busybox httpd</div>
+<div class="footer">清荷 v2.2.1 &middot; Powered by busybox httpd</div>
 
 <script>
 var VERSION = '-';
@@ -474,8 +474,7 @@ document.getElementById('btnBackup').addEventListener('click', function(){
   });
 });
 
-function restoreBackup(uid, name) {
-  var pkg = name.split('_')[0];
+function restoreBackup(uid, name, pkg) {
   api('restore', {pkg:pkg, uid:uid, name:name}).then(function(r){
     if (r.ok) {
       toast('恢复完成: '+name, 'success');
@@ -509,7 +508,7 @@ function loadBackupList() {
         '</div>'+
         '<button class="btn btn-green restore-btn">上号</button>';
       item.querySelector('.restore-btn').addEventListener('click', function(){
-        restoreBackup(it.uid, it.name);
+        restoreBackup(it.uid, it.name, pkg);
       });
       list.appendChild(item);
     });
